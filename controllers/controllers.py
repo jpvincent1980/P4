@@ -1,9 +1,24 @@
 #! /usr/bin/env python3
 # coding: utf-8
+from views import views
+from models import models
 
-# 1. Create a new tournament
-# 2. Add 8 players
-# 3. System generates pairs of players for the first round
-# 4. When the first round is over, results are manually entered in the system
-# 5. Repeat steps 3 and 4 for all remaining rounds until tournament is over
-# Entering players rankings
+class Controller:
+
+    def __init__(self):
+        self.model = models.Players
+        self.view = views.HomePage()
+
+    def start(self):
+        self.start = True
+        while self.start:
+            self.view.show_menu()
+            self.view.ask_user_choice()
+
+    def quit(self):
+        self.start = False
+
+
+if __name__ == "__main__":
+    pass
+
