@@ -3,6 +3,7 @@
 from views import views
 from models import models
 
+
 class Controller:
 
     def __init__(self):
@@ -21,4 +22,3 @@ class Controller:
 
 if __name__ == "__main__":
     pass
-

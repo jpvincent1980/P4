@@ -4,3 +4,5 @@ Livrables/
 .idea/
 *.docx
 test.py
+.flake8
+flake8_rapport/
