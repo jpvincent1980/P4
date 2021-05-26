@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 # coding: utf-8
-
 from models import models
 
 MAIN_MENU = {"1": "Créer un nouveau tournoi",
@@ -28,9 +27,20 @@ class View:
         pass
 
     @staticmethod
+    def show_title():
+        # chess_symbol = u"\u265E"
+        chess_symbol = "+"
+        title = "Gestionnaire de tournoi d'échecs"
+
+        print(chess_symbol * (len(title)+6))
+        print(chess_symbol * 2,
+              f"{title.upper()}",
+              chess_symbol * 2)
+        print(chess_symbol * (len(title)+6))
+        print()
+
+    @staticmethod
     def show_welcome_message():
-        print("Bienvenue dans votre logiciel de gestion de "
-              "tournois d'échecs.")
         print("Merci de bien vouloir faire votre choix parmi le menu "
               "ci-dessous:")
 
@@ -46,85 +56,53 @@ class HomePage(View):
 
     def ask_user_choice(self):
         choice = input(">>> ")
-        if choice not in self.menu or choice == "0":
+        if choice not in self.menu:
             print("Choix non valide. Veuillez ressaisir un choix "
                   "parmi la liste.")
             return HomePage()
         elif choice == "1":
-            return Tournaments().show_menu()
+            return CreateTournament()
         elif choice == "2":
-            return AddPlayers().show_menu()
+            return CreatePlayer()
         elif choice == "3":
-            return AddPlayersToTournament().show_menu()
+            return AddPlayersToTournament()
         elif choice == "4":
-            return Matches().show_menu()
+            return EnterMatches()
         elif choice == "5":
-            return Rankings().show_menu()
+            return EnterRankings()
         elif choice == "6":
-            return DisplayList().show_menu()
+            return DisplayList()
         elif choice == "7":
-            return ExportList().show_menu()
+            return ExportList()
         elif choice == "9":
-            return quit()
+            return EndPage()
 
 
-class Tournaments(View):
+class CreateTournament(View):
     def show_menu(self):
         print("Vous allez créer un nouveau tournoi.")
         name = input("Entrez le nom du tournoi -> ")
-        place = input("Entrez le lieu où se déroule le tournoi -> ")
+        place = input("Entrez le lieu où se déroule le tournoi -> ") or "Paris"
         start_date = input("Entrez la date de début du tournoi "
-                           "(JJ/MM/AAAA) -> ")
+                           "(JJ/MM/AAAA) -> ") or "14/10/1980"
         end_date = input("Entrez la date de fin du tournoi "
-                         "(JJ/MM/AAAA) -> ")
+                         "(JJ/MM/AAAA) -> ") or "14/10/1980"
         nb_of_rounds = input("Entrez le nombre de tours du tournoi "
-                             "-> ")
+                             "-> ") or "4"
         new_tournament = models.Tournaments(name=name,
-                                            place=place)
-        print(f"Le tournoi {new_tournament.name} se déroule à "
-              f"{new_tournament.place} en mode {new_tournament.time_control}.")
-        input()
+                                            place=place,
+                                            start_date=start_date,
+                                            end_date=end_date,
+                                            nb_of_rounds=nb_of_rounds)
+        print(f"{new_tournament.name} "
+              f"a été ajouté à notre base de données.")
+
+    def ask_user_choice(self):
+        input("Appuyez sur Entrée pour retourner au menu principal >>> ")
+        return HomePage()
 
 
-class Players(View):
-    def show_menu(self):
-        print("Afficher la liste des joueurs par :")
-        print("1: Ordre alphabétique")
-        print("2: Classement")
-        choice = input(">>> ")
-        if choice == "1":
-            players = sorted(models.Players.all_players,
-                             key=lambda x: x.family_name)
-            if len(players) < 1:
-                print("Aucun joueur n'est renseigné dans la base de données.")
-            for player in players:
-                print(player.first_name, " ", player.family_name,
-                      " - Classement -> ", player.ranking)
-            input(">>> ")
-        elif choice == "2":
-            players = sorted(models.Players.all_players,
-                             key=lambda x: x.ranking)
-            if len(players) < 1:
-                print("Aucun joueur n'est renseigné dans la base de données.")
-            for player in players:
-                print(player.first_name, " ", player.family_name,
-                      " - Classement -> ", player.ranking)
-            input(">>> ")
-        else:
-            print("Choix non valide.")
-            return Players.show_menu(self)
-
-
-class PlayersByTournament(View):
-    def show_menu(self):
-        tournament = input("Entrez le nom du tournoi:")
-        if tournament not in models.Tournaments.all_tournaments:
-            print("Ce tournoi n'existe pas.")
-        else:
-            print("Les joueurs inscrit au tournoi " + tournament + " sont:")
-
-
-class AddPlayers(View):
+class CreatePlayer(View):
     def show_menu(self):
         print("Vous allez créer un nouveau joueur.")
         first_name = input("Entrez le prénom du joueur -> ")
@@ -139,26 +117,36 @@ class AddPlayers(View):
                                     sex=sex,
                                     ranking=ranking)
         print(f"{new_player.first_name} {new_player.family_name} "
-              f"a été ajouté à notre base de joueurs.")
-        input()
+              f"a été ajouté à notre base de données.")
+        print()
+
+    def ask_user_choice(self):
+        input("Appuyez sur Entrée pour retourner au menu principal >>> ")
+        return HomePage()
 
 
 class AddPlayersToTournament(View):
     def show_menu(self):
         choice = input("Entrez le nom du tournoi: ")
-        for tournament in models.Tournaments.all_tournaments:
+        for tournament in models.TOURNAMENTS_TABLE:
             if tournament.name == choice:
                 print("Nombre de joueurs déjà inscrit au tournoi",
                       choice,
                       ":",
-                      len(tournament.players))
+                      len(TOURNAMENTS_TABLE))
                 tournament.players.append(Players())
                 break
             else:
                 continue
 
+    def ask_user_choice(self):
+        return HomePage()
 
-class Matches(View):
+
+class EnterMatches(View):
+    def show_menu(self):
+        self.ask_for_tournament()
+
     def ask_for_tournament(self):
         print("Veuillez entrer le nom du tournoi:")
         tournament = input(">>> ")
@@ -179,13 +167,15 @@ class Matches(View):
             print(round)
             input()
 
-    def show_menu(self):
-        self.ask_for_tournament()
+    def ask_user_choice(self):
+        return HomePage()
 
-
-class Rankings(View):
+class EnterRankings(View):
     def show_menu(self):
         print("This is the Rankings view.")
+
+    def ask_user_choice(self):
+        return HomePage()
 
 
 class DisplayList(View):
@@ -195,23 +185,113 @@ class DisplayList(View):
         self.menu = LISTS_MENU
         for key in self.menu.items():
             print(key[0], ": ", key[1])
-        choice = input()
-        if choice == "1":
-            return Players().show_menu()
-        if choice == "2":
-            return PlayersByTournament().show_menu()
-        if choice == "3":
-            if len(models.Tournaments.all_tournaments) < 1:
-                print("Aucun tournoi n'est renseigné dans "
-                      "la base de données")
-            else:
-                print("Voici la liste des tournois existants:")
-                for i, tournament in \
-                        enumerate(models.Tournaments.all_tournaments, start=1):
-                    print(i, ": ", tournament.name)
-                print()
-            print("Tapez Entrée pour revenir au menu principal")
+
+    def ask_user_choice(self):
+        choice = input(">>> ")
+        if choice not in self.menu:
+            print("Choix non valide. Veuillez ressaisir un choix "
+                  "parmi la liste.")
+            return DisplayList()
+        elif choice == "1":
+            return DisplayListPlayers()
+        elif choice == "2":
+            return DisplayListPlayersByTournament()
+        elif choice == "3":
+            return DisplayListTournaments()
+        elif choice == "4":
+            return DisplayListRoundsByTournament()
+        elif choice == "5":
+            return DisplayListMatchesByTournament()
+        elif choice == "6":
+            return DisplayListPairings()
+        elif choice == "8":
+            return HomePage()
+        elif choice == "9":
+            return EndPage()
+
+
+class DisplayListPlayers(View):
+    def show_menu(self):
+        if len(models.PLAYERS_TABLE) == 0:
+            print("Aucun joueur enregistré dans la base de données.")
+            print("Tapez Entrée pour revenir au menu principal.")
+        else:
+            print("Voici la liste des joueurs enregistrés:")
+            for player in models.PLAYERS_TABLE:
+                print(player.doc_id,"->",player["first_name"],player["family_name"])
+            print()
+
+    def ask_user_choice(self):
+        print("Tapez Entrée pour revenir au menu principal.")
+        input(">>> ")
+        return HomePage()
+
+
+class DisplayListPlayersByTournament(View):
+    def show_menu(self):
+        print("Merci de sélectionner le tournoi en tapant son numéro ->")
+        for tournament in models.TOURNAMENTS_TABLE:
+            print(tournament.doc_id, "->", tournament["name"])
+
+    def ask_user_choice(self):
+        tournament_number = input(">>> ")
+        nb_of_players = models.TOURNAMENTS_TABLE.get(doc_id=int(tournament_number))["players"]
+        tournament_name = models.TOURNAMENTS_TABLE.get(doc_id=int(tournament_number))["name"]
+        if len(nb_of_players) == 0:
+            print("Aucun joueur n'est inscrit au", tournament_name,":")
+            print()
+            print("Tapez Entrée pour revenir au menu principal.")
             input(">>> ")
+        else:
+            print("Voici les inscrits au", tournament_name,":")
+            for player in nb_of_players:
+                print(player["first_name"],player["family_name"])
+            print()
+            print("Tapez Entrée pour revenir au menu principal.")
+            input(">>> ")
+        return HomePage()
+
+
+class DisplayListTournaments(View):
+    def show_menu(self):
+        if len(models.TOURNAMENTS_TABLE) == 0:
+            print("Aucun tournoi enregistré dans la base de données.")
+            print("Tapez Entrée pour revenir au menu principal.")
+        else:
+            print("Voici la liste des tournois enregistrés:")
+            for tournament in models.TOURNAMENTS_TABLE:
+                print(tournament.doc_id,"->",tournament["name"])
+            print("Tapez Entrée pour revenir au menu principal.")
+
+    def ask_user_choice(self):
+        choice = input(">>> ")
+        return HomePage()
+
+
+class DisplayListRoundsByTournament(View):
+    def show_menu(self):
+        pass
+
+    def ask_user_choice(self):
+        choice = input(">>> ")
+        return HomePage()
+
+
+class DisplayListMatchesByTournament(View):
+    def show_menu(self):
+        pass
+
+    def ask_user_choice(self):
+        choice = input(">>> ")
+        return HomePage()
+
+
+class DisplayListPairings(View):
+    def show_menu(self):
+        pass
+
+    def ask_user_choice(self):
+        choice = input(">>> ")
         return HomePage()
 
 
@@ -222,8 +302,25 @@ class ExportList(View):
         self.menu = LISTS_MENU
         for key in self.menu.items():
             print(key[0], ": ", key[1])
-        choice = input()
 
+    def ask_user_choice(self):
+        return HomePage()
+
+
+class EndPage(View):
+    def show_menu(self):
+        # chess_symbol = u"\u265E"
+        chess_symbol = "+"
+        message = "A bientôt !"
+
+        print()
+        print(chess_symbol * (len(message) + 6))
+        print(chess_symbol * 2,
+              f"{message.upper()}",
+              chess_symbol * 2)
+        print(chess_symbol * (len(message) + 6))
+        print()
+        quit()
 
 if __name__ == "__main__":
     pass

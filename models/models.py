@@ -1,33 +1,37 @@
 #! /usr/bin/env python3
 # coding: utf-8
-
-class Players:
-
-    all_players = []
-
-    def __init__(self, first_name, family_name, birth_date, sex, ranking):
-        self.first_name = first_name
-        self.family_name = family_name
-        self.birth_date = birth_date
-        self.sex = sex
-        self.ranking = ranking
-        Players.all_players.append(self)
-
+from tinydb import TinyDB,Query
 
 TIME_CONTROL = {"1": "Bullet",
                 "2": "Blitz",
                 "3": "Coup rapide"}
 
+DB = TinyDB("db.json")
+TOURNAMENTS_TABLE = DB.table("tournaments")
+PLAYERS_TABLE = DB.table("players")
+
+class Players:
+    global DB, PLAYERS_TABLE
+    def __init__(self, first_name, family_name, birth_date, sex, ranking):
+        serialized_player = {}
+        self.first_name = first_name
+        self.family_name = family_name
+        self.birth_date = birth_date
+        self.sex = sex
+        self.ranking = ranking
+        for attributes in self.__dict__.items():
+            serialized_player[attributes[0]] = attributes[1]
+        PLAYERS_TABLE.insert(serialized_player)
+
 
 class Tournaments:
-
-    all_tournaments = []
-    global TIME_CONTROL
-
+    global TIME_CONTROL, DB, TOURNAMENTS_TABLE
     def __init__(self, name="", place="", start_date="", end_date="",
                  players=[],
                  time_control=TIME_CONTROL["1"], description="",
                  nb_of_rounds=4):
+        players = []
+        serialized_tournament = {}
         self.name = name
         self.place = place
         self.start_date = start_date
@@ -37,7 +41,9 @@ class Tournaments:
         self.players = players
         self.time_control = time_control
         self.description = description
-        Tournaments.all_tournaments.append(self)
+        for attributes in self.__dict__.items():
+            serialized_tournament[attributes[0]] = attributes[1]
+        TOURNAMENTS_TABLE.insert(serialized_tournament)
 
     def add_players(self, player):
         self.players.append(player)
