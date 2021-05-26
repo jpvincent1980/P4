@@ -127,19 +127,57 @@ class CreatePlayer(View):
 
 class AddPlayersToTournament(View):
     def show_menu(self):
-        choice = input("Entrez le nom du tournoi: ")
+        print("Voici la liste des tournois enregistrés:")
         for tournament in models.TOURNAMENTS_TABLE:
-            if tournament.name == choice:
-                print("Nombre de joueurs déjà inscrit au tournoi",
-                      choice,
-                      ":",
-                      len(TOURNAMENTS_TABLE))
-                tournament.players.append(Players())
-                break
+            print(tournament.doc_id, "->", tournament["name"])
+        print("Entrez le numéro du tournoi:")
+        tournament_id = int(input(">>> "))
+        tournament_name = models.TOURNAMENTS_TABLE.get(doc_id=tournament_id)["name"]
+        tournament_players = models.TOURNAMENTS_TABLE.get(doc_id=tournament_id)["players"]
+        tournament_nb_of_players = len(models.TOURNAMENTS_TABLE.get(doc_id=tournament_id))
+        tournament_players_id = []
+        if tournament_nb_of_players == 0:
+            print("Aucun joueur n'est inscrit au", tournament_name, "pour le moment.")
+        elif len(tournament_players) >= 5:
+            print("Le tournoi est déjà complet avec les joueurs suivants:")
+            for player in tournament_players:
+                print(player["first_name"],player["family_name"])
+            return
+        else:
+            print("Voici la liste des joueurs déjà inscrits au", tournament_name, ":")
+            for player in tournament_players:
+                print(player["first_name"],player["family_name"])
+                tournament_players_id.append(player["id"])
+        print()
+
+        all_players_id = []
+        for player in models.PLAYERS_TABLE.all():
+            all_players_id.append(player.doc_id)
+        unregistered_players_id = list(set(all_players_id).difference(tournament_players_id))
+
+        if len(unregistered_players_id) == 0 and tournament_nb_of_players > 0:
+            print("Tous les joueurs de la base sont déjà inscrits au", tournament_name, end=".\n")
+            print("Merci de créer un nouveau joueur avant de l'inscrire au", tournament_name, end=".\n")
+        else:
+            print("Voici la liste des joueurs enregistrés non inscrits au", tournament_name, ":")
+            for player in models.PLAYERS_TABLE:
+                if player.doc_id not in tournament_players_id:
+                    print(player.doc_id, "->", player["first_name"], player["family_name"])
+            print("Entrez le numéro du joueur à inscrire au", tournament_name,":")
+            player_id = int(input(">>> "))
+            if player_id in tournament_players_id:
+                print("Ce joueur est déjà inscrit au", tournament_name, ".")
+            elif player_id not in unregistered_players_id:
+                print("Choix non valide.")
             else:
-                continue
+                models.add_players(tournament_id, player_id)
+                player_first_name = models.PLAYERS_TABLE.get(doc_id=player_id)["first_name"]
+                player_family_name = models.PLAYERS_TABLE.get(doc_id=player_id)["family_name"]
+                print(f"{player_first_name} {player_family_name} a été inscrit au {tournament_name}.")
 
     def ask_user_choice(self):
+        print()
+        input("Appuyez sur Entrée pour retourner au menu principal >>> ")
         return HomePage()
 
 
@@ -238,7 +276,7 @@ class DisplayListPlayersByTournament(View):
         nb_of_players = models.TOURNAMENTS_TABLE.get(doc_id=int(tournament_number))["players"]
         tournament_name = models.TOURNAMENTS_TABLE.get(doc_id=int(tournament_number))["name"]
         if len(nb_of_players) == 0:
-            print("Aucun joueur n'est inscrit au", tournament_name,":")
+            print("Aucun joueur n'est inscrit au", tournament_name,".")
             print()
             print("Tapez Entrée pour revenir au menu principal.")
             input(">>> ")

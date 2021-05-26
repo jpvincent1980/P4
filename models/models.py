@@ -45,9 +45,6 @@ class Tournaments:
             serialized_tournament[attributes[0]] = attributes[1]
         TOURNAMENTS_TABLE.insert(serialized_tournament)
 
-    def add_players(self, player):
-        self.players.append(player)
-
     def pairing(self, round_number):
         # Si premier tour, triez les joueurs en fonction de leur classement
         # puis séparez les joueurs en deux moitiés, les meilleurs joueurs
@@ -76,6 +73,14 @@ class Matches:
         self.players_pair = ()
         self.players_color = ()
 
+
+def add_players(tournament_id,player_id):
+    serialized_player = PLAYERS_TABLE.get(doc_id=player_id)
+    serialized_player.update({"id": player_id})
+    current_tournament_players = TOURNAMENTS_TABLE.get(doc_id=tournament_id)["players"]
+    current_tournament_players.append(serialized_player)
+    TOURNAMENTS_TABLE.update({"players":current_tournament_players},doc_ids=[tournament_id])
+    return
 
 if __name__ == "__main__":
     pass
