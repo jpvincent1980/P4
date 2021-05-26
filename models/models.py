@@ -74,13 +74,16 @@ class Matches:
         self.players_color = ()
 
 
-def add_players(tournament_id,player_id):
+def add_players(tournament_id, player_id):
     serialized_player = PLAYERS_TABLE.get(doc_id=player_id)
     serialized_player.update({"id": player_id})
     current_tournament_players = TOURNAMENTS_TABLE.get(doc_id=tournament_id)["players"]
     current_tournament_players.append(serialized_player)
     TOURNAMENTS_TABLE.update({"players":current_tournament_players},doc_ids=[tournament_id])
     return
+
+def update_player_ranking(player_id, new_ranking):
+    PLAYERS_TABLE.update({"ranking": new_ranking},doc_ids=[player_id])
 
 if __name__ == "__main__":
     pass

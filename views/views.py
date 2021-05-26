@@ -20,6 +20,9 @@ LISTS_MENU = {"1": "Liste de tous les joueurs",
               "8": "Retour au menu principal",
               "9": "Quitter le programme"}
 
+SORTING_MENU = {"1": "ordre alphabétique",
+                "2": "classement"}
+
 
 class View:
 
@@ -210,9 +213,26 @@ class EnterMatches(View):
 
 class EnterRankings(View):
     def show_menu(self):
-        print("This is the Rankings view.")
+        if len(models.PLAYERS_TABLE) == 0:
+            print("Aucun joueur n'est enregistré dans la base de données.")
+            print("Tapez Entrée pour revenir au menu principal.")
+        else:
+            print("Entrez le numéro du joueur:")
+            for player in models.PLAYERS_TABLE:
+                print(player.doc_id,"->",player["first_name"],player["family_name"],
+                      "| Classement actuel ->", player["ranking"])
+            print()
+            player_id = int(input(">>> "))
+            player_first_name = models.PLAYERS_TABLE.get(doc_id=player_id)["first_name"]
+            player_family_name = models.PLAYERS_TABLE.get(doc_id=player_id)["family_name"]
+            print(f"Entrez le nouveau classement de {player_first_name} {player_family_name}:")
+            new_ranking = input(">>> ")
+            models.update_player_ranking(player_id, new_ranking)
 
     def ask_user_choice(self):
+        print()
+        print("Tapez Entrée pour revenir au menu principal.")
+        input(">>> ")
         return HomePage()
 
 
@@ -248,15 +268,33 @@ class DisplayList(View):
             return EndPage()
 
 
-class DisplayListPlayers(View):
+class DisplayListPlayers(DisplayList):
+    global SORTING_MENU
     def show_menu(self):
         if len(models.PLAYERS_TABLE) == 0:
             print("Aucun joueur enregistré dans la base de données.")
             print("Tapez Entrée pour revenir au menu principal.")
         else:
+            print("Affichez la liste des joueurs par:")
+            for element in SORTING_MENU.items():
+                print(element[0],":",element[1])
+            ranking_sort = input(">>> ")
             print("Voici la liste des joueurs enregistrés:")
-            for player in models.PLAYERS_TABLE:
-                print(player.doc_id,"->",player["first_name"],player["family_name"])
+            if ranking_sort == "1":
+                for player in sorted(models.PLAYERS_TABLE, key=lambda x:x['family_name']):
+                    print(player["first_name"],
+                          player["family_name"],
+                          "| Classement -> n°",
+                          player["ranking"])
+            elif ranking_sort == "2":
+                for player in sorted(models.PLAYERS_TABLE, key=lambda x:x['ranking']):
+                    print(player["first_name"],
+                          player["family_name"],
+                          "| Classement -> n°",
+                          player["ranking"])
+            else:
+                print("Choix non valide.")
+                return
             print()
 
     def ask_user_choice(self):
