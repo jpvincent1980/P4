@@ -87,9 +87,9 @@ class CreateTournament(View):
         name = input("Entrez le nom du tournoi -> ")
         place = input("Entrez le lieu où se déroule le tournoi -> ") or "Paris"
         start_date = input("Entrez la date de début du tournoi "
-                           "(JJ/MM/AAAA) -> ") or "14/10/1980"
+                           "(JJ/MM/AAAA) -> ") or models.TODAY
         end_date = input("Entrez la date de fin du tournoi "
-                         "(JJ/MM/AAAA) -> ") or "14/10/1980"
+                         "(JJ/MM/AAAA) -> ") or models.TODAY
         nb_of_rounds = input("Entrez le nombre de tours du tournoi "
                              "-> ") or "4"
         new_tournament = models.Tournaments(name=name,
@@ -141,7 +141,7 @@ class AddPlayersToTournament(View):
         tournament_players_id = []
         if tournament_nb_of_players == 0:
             print("Aucun joueur n'est inscrit au", tournament_name, "pour le moment.")
-        elif len(tournament_players) >= 5:
+        elif len(tournament_players) >= 8:
             print("Le tournoi est déjà complet avec les joueurs suivants:")
             for player in tournament_players:
                 print(player["first_name"],player["family_name"])
@@ -287,7 +287,7 @@ class DisplayListPlayers(DisplayList):
                           "| Classement -> n°",
                           player["ranking"])
             elif ranking_sort == "2":
-                for player in sorted(models.PLAYERS_TABLE, key=lambda x:x['ranking']):
+                for player in sorted(models.PLAYERS_TABLE, key=lambda x:int(x['ranking'])):
                     print(player["first_name"],
                           player["family_name"],
                           "| Classement -> n°",
