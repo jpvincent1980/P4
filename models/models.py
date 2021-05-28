@@ -115,6 +115,27 @@ def generate_round(tournament_id):
     else:
         print("Le tournoi a atteint son nombre maximal de rondes.")
 
+def generate_matches(tournament_id,round_id):
+    global DB, TOURNAMENTS_TABLE, PLAYERS_TABLE
+    matches = []
+    players = TOURNAMENTS_TABLE.get(doc_id=int(tournament_id))["players"]
+    round = TOURNAMENTS_TABLE.get(doc_id=int(tournament_id))["rounds"][round_id - 1]
+    if len(players) < 8:
+        print(f"Il manque encore {8 - len(players)} joueurs pour que le tournoi soit complet.")
+    elif round_id == 1:
+        sorted_players = sorted(players,key=lambda x:x["ranking"],reverse=False)
+        for i in range(4):
+            new_match = Matches(sorted_players[i]["first_name"] + " " +
+                                   sorted_players[i]["family_name"],
+                                   sorted_players[i+4]["first_name"] + " " +
+                                   sorted_players[i+4]["family_name"])
+            matches.append(new_match.pair)
+        print(matches)
+        round["matches"] = matches
+        print(round)
+        TOURNAMENTS_TABLE.update({"rounds":round},doc_ids=[tournament_id])
+    # TODO Génération des matches pour les tours > tour n° 1
+
 if __name__ == "__main__":
     match = Matches("Joueur 1","Joueur 2")
     print(match.match_played())
