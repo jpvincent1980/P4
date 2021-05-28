@@ -99,6 +99,7 @@ def add_players(tournament_id, player_id):
 
 def update_player_ranking(player_id, new_ranking):
     PLAYERS_TABLE.update({"ranking": new_ranking},doc_ids=[player_id])
+    return
 
 def generate_round(tournament_id):
     global DB, TOURNAMENTS_TABLE
@@ -107,21 +108,28 @@ def generate_round(tournament_id):
     if len(rounds) == 0:
         new_round = Rounds("Round 1", TODAY, NOW)
         TOURNAMENTS_TABLE.update({"rounds":[new_round.__dict__]},doc_ids=[tournament_id])
+        return
     elif len(rounds) < int(tournament["nb_of_rounds"]):
         round_number = len(rounds) + 1
         new_round = Rounds("Round " + str(round_number), TODAY, NOW)
         rounds.append(new_round.__dict__)
         TOURNAMENTS_TABLE.update({"rounds": rounds}, doc_ids=[tournament_id])
+        return
     else:
         print("Le tournoi a atteint son nombre maximal de rondes.")
+        return
 
-def generate_matches(tournament_id,round_id):
+def generate_matches(tournament_id, round_id):
     global DB, TOURNAMENTS_TABLE, PLAYERS_TABLE
     matches = []
     players = TOURNAMENTS_TABLE.get(doc_id=int(tournament_id))["players"]
-    round = TOURNAMENTS_TABLE.get(doc_id=int(tournament_id))["rounds"][round_id - 1]
+    nb_of_rounds = TOURNAMENTS_TABLE.get(doc_id=int(tournament_id))["nb_of_rounds"]
     if len(players) < 8:
         print(f"Il manque encore {8 - len(players)} joueurs pour que le tournoi soit complet.")
+        return
+    elif int(round_id) > int(nb_of_rounds):
+        print(f"Il n'y a que {nb_of_rounds} tours dans ce tournoi.")
+        return
     elif round_id == 1:
         sorted_players = sorted(players,key=lambda x:x["ranking"],reverse=False)
         for i in range(4):
@@ -134,6 +142,7 @@ def generate_matches(tournament_id,round_id):
         round["matches"] = matches
         print(round)
         TOURNAMENTS_TABLE.update({"rounds":round},doc_ids=[tournament_id])
+        return
     # TODO Génération des matches pour les tours > tour n° 1
 
 if __name__ == "__main__":
