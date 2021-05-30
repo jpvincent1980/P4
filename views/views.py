@@ -135,9 +135,14 @@ class AddPlayersToTournament(View):
             print(tournament.doc_id, "->", tournament["name"])
         print("Entrez le numéro du tournoi:")
         tournament_id = int(input(">>> "))
-        tournament_name = models.TOURNAMENTS_TABLE.get(doc_id=tournament_id)["name"]
-        tournament_players = models.TOURNAMENTS_TABLE.get(doc_id=tournament_id)["players"]
-        tournament_nb_of_players = len(models.TOURNAMENTS_TABLE.get(doc_id=tournament_id))
+        tournament_name = models.DB.get_record_data("tournaments",
+                                                    tournament_id,
+                                                    "name")
+        tournament_players = models.DB.get_record_data("tournaments",
+                                                       tournament_id,
+                                                       "players")
+        tournament_nb_of_players = len(models.DB.get_record_data("tournaments",
+                                                       tournament_id))
         tournament_players_id = []
         if tournament_nb_of_players == 0:
             print("Aucun joueur n'est inscrit au", tournament_name, "pour le moment.")
@@ -173,9 +178,16 @@ class AddPlayersToTournament(View):
             elif player_id not in unregistered_players_id:
                 print("Choix non valide.")
             else:
-                models.add_players(tournament_id, player_id)
-                player_first_name = models.PLAYERS_TABLE.get(doc_id=player_id)["first_name"]
-                player_family_name = models.PLAYERS_TABLE.get(doc_id=player_id)["family_name"]
+                serialized_player = models.DB.get_record_data("players", player_id)
+                serialized_player.update({"id": player_id})
+                models.DB.update_record_data("tournaments", "players", serialized_player, tournament_id, True)
+                # models.add_players(tournament_id, player_id)
+                player_first_name = models.DB.get_record_data("players",
+                                                    player_id,
+                                                    "first_name")
+                player_family_name = models.DB.get_record_data("players",
+                                                    player_id,
+                                                    "family_name")
                 print(f"{player_first_name} {player_family_name} a été inscrit au {tournament_name}.")
 
     def ask_user_choice(self):
@@ -223,11 +235,11 @@ class EnterRankings(View):
                       "| Classement actuel ->", player["ranking"])
             print()
             player_id = int(input(">>> "))
-            player_first_name = models.PLAYERS_TABLE.get(doc_id=player_id)["first_name"]
-            player_family_name = models.PLAYERS_TABLE.get(doc_id=player_id)["family_name"]
+            player_first_name = models.DB.get_record_data("players",player_id,"first_name")
+            player_family_name = models.DB.get_record_data("players",player_id,"family_name")
             print(f"Entrez le nouveau classement de {player_first_name} {player_family_name}:")
             new_ranking = input(">>> ")
-            models.update_player_ranking(player_id, new_ranking)
+            models.DB.update_record_data("players","ranking",new_ranking,player_id)
 
     def ask_user_choice(self):
         print()
@@ -310,17 +322,21 @@ class DisplayListPlayersByTournament(View):
             print(tournament.doc_id, "->", tournament["name"])
 
     def ask_user_choice(self):
-        tournament_number = input(">>> ")
-        nb_of_players = models.TOURNAMENTS_TABLE.get(doc_id=int(tournament_number))["players"]
-        tournament_name = models.TOURNAMENTS_TABLE.get(doc_id=int(tournament_number))["name"]
-        if len(nb_of_players) == 0:
-            print("Aucun joueur n'est inscrit au", tournament_name,".")
+        tournament_id = input(">>> ")
+        tournament_players = models.DB.get_record_data("tournaments",
+                                                       int(tournament_id),
+                                                       "players")
+        tournament_name = models.DB.get_record_data("tournaments",
+                                                    int(tournament_id),
+                                                    "name",)
+        if len(tournament_players) == 0:
+            print("Aucun joueur n'est inscrit au ", tournament_name,".",sep="")
             print()
             print("Tapez Entrée pour revenir au menu principal.")
             input(">>> ")
         else:
             print("Voici les inscrits au", tournament_name,":")
-            for player in nb_of_players:
+            for player in tournament_players:
                 print(player["first_name"],player["family_name"])
             print()
             print("Tapez Entrée pour revenir au menu principal.")
@@ -346,19 +362,49 @@ class DisplayListTournaments(View):
 
 class DisplayListRoundsByTournament(View):
     def show_menu(self):
-        pass
+        print("Merci de sélectionner le tournoi en tapant son numéro ->")
+        for tournament in models.TOURNAMENTS_TABLE:
+            print(tournament.doc_id, "->", tournament["name"])
 
     def ask_user_choice(self):
-        choice = input(">>> ")
+        tournament_id = input(">>> ")
+        tournament_rounds = models.DB.get_record_data("tournaments",
+                                                       int(tournament_id),
+                                                       "rounds")
+        tournament_name = models.DB.get_record_data("tournaments",
+                                                    int(tournament_id),
+                                                    "name",)
+        if len(tournament_rounds) == 0:
+            print("Aucun round pour le ", tournament_name,".",sep="")
+            print()
+            print("Tapez Entrée pour revenir au menu principal.")
+            input(">>> ")
+        else:
+            print("Voici les rounds du", tournament_name,":")
+            for round in tournament_rounds:
+                print(round["name"])
+            print()
+            print("Tapez Entrée pour revenir au menu principal.")
+            input(">>> ")
         return HomePage()
 
 
 class DisplayListMatchesByTournament(View):
     def show_menu(self):
-        pass
+        DisplayListRoundsByTournament().show_menu()
+        tournament_id = input(">>> ")
+        tournament_rounds = models.DB.get_record_data("tournaments",
+                                                      int(tournament_id),
+                                                      "rounds")
+        print("Merci de sélectionner le round du tournoi en tapant son numéro ->")
+        for i,round in enumerate(tournament_rounds,start=1):
+            print(i, "->", round["name"])
+        round_id = input(">>> ")
+        for match in tournament_rounds[int(round_id)-1]["matches"]:
+            print(match)
 
     def ask_user_choice(self):
-        choice = input(">>> ")
+        input(">>> ")
         return HomePage()
 
 

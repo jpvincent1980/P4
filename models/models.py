@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # coding: utf-8
-from tinydb import TinyDB,Query
+from tinydb import TinyDB
+from models import dbmanager
 import time
 
 TIME_CONTROL = {"1": "Bullet",
@@ -12,9 +13,9 @@ POINTS = {"Match perdu":0,
           "Match gagné":1}
 
 POINTS_LIST = list(POINTS.values())
-DB = TinyDB("db.json")
-TOURNAMENTS_TABLE = DB.table("tournaments")
-PLAYERS_TABLE = DB.table("players")
+DB = dbmanager.DBManager("db.json","tournaments","players")
+TOURNAMENTS_TABLE = DB.tournaments
+PLAYERS_TABLE = DB.players
 TODAY = time.strftime("%d/%m/%Y")
 NOW = time.strftime("%Hh%Mm%Ss")
 
@@ -29,7 +30,7 @@ class Players:
         self.ranking = ranking
         for attributes in self.__dict__.items():
             serialized_player[attributes[0]] = attributes[1]
-        PLAYERS_TABLE.insert(serialized_player)
+        DB.add_record("players",serialized_player)
 
 
 class Tournaments:
@@ -51,7 +52,7 @@ class Tournaments:
         self.description = description
         for attributes in self.__dict__.items():
             serialized_tournament[attributes[0]] = attributes[1]
-        TOURNAMENTS_TABLE.insert(serialized_tournament)
+        DB.add_record("tournaments",serialized_tournament)
 
 
 class Rounds:
@@ -89,41 +90,26 @@ class Matches:
         return
 
 
-def add_players(tournament_id, player_id):
-    serialized_player = PLAYERS_TABLE.get(doc_id=player_id)
-    serialized_player.update({"id": player_id})
-    current_tournament_players = TOURNAMENTS_TABLE.get(doc_id=tournament_id)["players"]
-    current_tournament_players.append(serialized_player)
-    TOURNAMENTS_TABLE.update({"players":current_tournament_players},doc_ids=[tournament_id])
-    return
-
-def update_player_ranking(player_id, new_ranking):
-    PLAYERS_TABLE.update({"ranking": new_ranking},doc_ids=[player_id])
-    return
-
 def generate_round(tournament_id):
     global DB, TOURNAMENTS_TABLE
-    tournament = TOURNAMENTS_TABLE.get(doc_id=int(tournament_id))
+    tournament = DB.get_record_data("tournaments",tournament_id)
     rounds = tournament["rounds"]
     if len(rounds) == 0:
-        new_round = Rounds("Round 1", TODAY, NOW)
-        TOURNAMENTS_TABLE.update({"rounds":[new_round.__dict__]},doc_ids=[tournament_id])
-        return
+        new_round = Rounds("Round 1",TODAY,NOW)
+        DB.update_record_data("tournaments","rounds",[new_round.__dict__],tournament_id)
     elif len(rounds) < int(tournament["nb_of_rounds"]):
         round_number = len(rounds) + 1
-        new_round = Rounds("Round " + str(round_number), TODAY, NOW)
-        rounds.append(new_round.__dict__)
-        TOURNAMENTS_TABLE.update({"rounds": rounds}, doc_ids=[tournament_id])
-        return
+        new_round = Rounds("Round " + str(round_number),TODAY,NOW)
+        DB.update_record_data("tournaments","rounds",[new_round.__dict__],tournament_id,True)
     else:
         print("Le tournoi a atteint son nombre maximal de rondes.")
-        return
 
 def generate_matches(tournament_id, round_id):
     global DB, TOURNAMENTS_TABLE, PLAYERS_TABLE
     matches = []
-    players = TOURNAMENTS_TABLE.get(doc_id=int(tournament_id))["players"]
-    nb_of_rounds = TOURNAMENTS_TABLE.get(doc_id=int(tournament_id))["nb_of_rounds"]
+    players = DB.get_record_data("tournaments",tournament_id,"players")
+    nb_of_rounds = DB.get_record_data("tournaments",tournament_id,"nb_of_rounds")
+    rounds = DB.get_record_data("tournaments", tournament_id, "rounds")
     if len(players) < 8:
         print(f"Il manque encore {8 - len(players)} joueurs pour que le tournoi soit complet.")
         return
@@ -138,17 +124,10 @@ def generate_matches(tournament_id, round_id):
                                    sorted_players[i+4]["first_name"] + " " +
                                    sorted_players[i+4]["family_name"])
             matches.append(new_match.pair)
-        print(matches)
-        round["matches"] = matches
-        print(round)
-        TOURNAMENTS_TABLE.update({"rounds":round},doc_ids=[tournament_id])
+        rounds[0]["matches"] = matches
+        DB.update_record_data("tournaments","rounds",rounds,tournament_id)
         return
     # TODO Génération des matches pour les tours > tour n° 1
 
 if __name__ == "__main__":
-    match = Matches("Joueur 1","Joueur 2")
-    print(match.match_played())
-    match.match_score(0,1)
-    print(match.pair)
-    print(match.match_played())
-    print(match.pair)
+    pass
