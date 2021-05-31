@@ -20,6 +20,21 @@ TODAY = time.strftime("%d/%m/%Y")
 NOW = time.strftime("%Hh%Mm%Ss")
 
 class Players:
+    """
+            A class that represents a chess player.
+
+            Attributes
+            ----------
+            first_name -> first_name of the player
+            family_name -> family_name of the player
+            birth_date -> date of birth of the player
+            sex -> sex of the player
+            ranking  -> ranking of the player
+
+            Methods
+            -------
+            None
+            """
     global DB, PLAYERS_TABLE
     def __init__(self, first_name, family_name, birth_date, sex, ranking):
         serialized_player = {}
@@ -34,6 +49,25 @@ class Players:
 
 
 class Tournaments:
+    """
+            A class that represents a tournament.
+
+            Attributes
+            ----------
+            name -> name of the tournament
+            place -> name of the place where the tournament takes place
+            start_date -> start date of the tournament
+            end_date -> end date of the tournament
+            nb_of_rounds  -> number of rounds of the tournament (4 by default)
+            rounds -> list of tournament's rounds
+            players -> list of tournament's players
+            time_control -> type of time control (Bullet, Blitz or Coup Rapide)
+            description -> description of the tournament
+
+            Methods
+            -------
+            None
+            """
     global TIME_CONTROL, DB, TOURNAMENTS_TABLE
     def __init__(self, name="", place="", start_date=TODAY, end_date=TODAY,
                  players=[],
@@ -56,6 +90,23 @@ class Tournaments:
 
 
 class Rounds:
+    """
+            A class that represents a tournament's round.
+
+            Attributes
+            ----------
+            name -> name of the tournament's round
+            start_date -> start date of the tournament's round
+            start_time -> start time of the tournament's round
+            end_date -> end date of the tournament's round
+            end_time -> end time of the tournament's round
+            matches -> list of matches of the tournament's round
+
+            Methods
+            -------
+            round_played -> returns True if the round is over (i.e.
+            all round's matches have been played) or False if not
+            """
     def __init__(self, name, start_date, start_time):
         self.name = name
         self.start_date = start_date
@@ -73,6 +124,22 @@ class Rounds:
 
 
 class Matches:
+    """
+            A class that represents a round's round.
+
+            Attributes
+            ----------
+            player1 -> player data for the first player of the match
+            player2 -> player data for the second player of the match
+            pair -> a list of two tuples, each tuple representing a player
+            and its score
+
+            Methods
+            -------
+            match_played -> returns True if the match is over (i.e.
+            sum of points of both players is greater than 0) or False if not
+            match_score -> updates the score of the match
+            """
     def __init__(self,player1,player2):
         self.player1 = player1
         self.player2 = player2

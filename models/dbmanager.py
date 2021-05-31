@@ -3,6 +3,27 @@
 from tinydb import TinyDB
 
 class DBManager:
+    """
+        A class that interacts with the TinyDB database.
+
+        Attributes
+        ----------
+        DB -> creates or connects to the TinyDB database
+        table -> a dynamic variable that represents the table(s)
+        of the TinyDB database
+
+        Methods
+        -------
+        add_record -> add data (record_data) as a new record to the table
+        (table_name) of the TinyDB database
+        update_record_data -> update the value of a specific key (data_key)
+        of a record named with its doc_id (record_id) in a specific table (table_name)
+        with a new value (data_value) by replacing the existing value (append=False)
+        or appending the existing value (append=True)
+        get_record_data -> fetches all data (data_key=None) of a record named
+        with its doc_id (record_id) for a specific table (table_name) or only
+        a specific key (data_key) of this record.
+        """
     pass
 
     def __init__(self, db_name, *table_name):
@@ -28,10 +49,4 @@ class DBManager:
             return getattr(self, table_name).get(doc_id=record_id)
 
 if __name__ == "__main__":
-    # DB = DBManager("test.json","tournaments","players")
-    # print(DB)
-    # print(DB.__dict__)
-    # DB.add_record("players",{"name":"Rabbit"})
-    # DB.update_record_data("players","name","Lapin",2)
-    # print(DB.get_record_data("tournaments",3))
     pass
