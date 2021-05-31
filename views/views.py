@@ -96,7 +96,8 @@ class CreateTournament(View):
                                             place=place,
                                             start_date=start_date,
                                             end_date=end_date,
-                                            nb_of_rounds=nb_of_rounds)
+                                            nb_of_rounds=nb_of_rounds,
+                                            add_to_db=True)
         print(f"{new_tournament.name} "
               f"a été ajouté à notre base de données.")
 
@@ -118,7 +119,7 @@ class CreatePlayer(View):
                                     family_name=family_name,
                                     birth_date=birth_date,
                                     sex=sex,
-                                    ranking=ranking)
+                                    ranking=ranking, add_to_db=True)
         print(f"{new_player.first_name} {new_player.family_name} "
               f"a été ajouté à notre base de données.")
         print()
