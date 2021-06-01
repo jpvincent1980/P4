@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 # coding: utf-8
+import inspect
+
 from tinydb import TinyDB
 
 class DBManager:
@@ -34,13 +36,13 @@ class DBManager:
     def add_record(self, table_name, record_data):
         getattr(self,table_name).insert(record_data)
 
-    def update_record_data(self,table_name, data_key, data_value, record_id, append=False):
+    def update_record_data(self,table_name, record_id, data_key, new_value, append=False):
         if append:
             key_value = getattr(self, table_name).get(doc_id=record_id)[data_key]
-            key_value.append(data_value)
+            key_value.append(new_value)
             getattr(self, table_name).update({data_key:key_value}, doc_ids=[record_id])
         else:
-            getattr(self, table_name).update({data_key:data_value},doc_ids=[record_id])
+            getattr(self, table_name).update({data_key:new_value}, doc_ids=[record_id])
 
     def get_record_data(self,table_name, record_id, data_key=None):
         if data_key:
