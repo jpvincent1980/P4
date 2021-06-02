@@ -126,7 +126,6 @@ class Tournaments:
         self.time_control = time_control
         self.description = description
         self.id = id
-        self.tournament_players_ids = []
         if add_to_db:
             serialized_tournament = {}
             for attributes in self.__dict__.items():
@@ -169,6 +168,10 @@ class Tournaments:
         return len(self.players)
 
     @property
+    def tournament_players_ids(self):
+        return [player["id"] for player in self.players]
+
+    @property
     def tournament_nb_of_rounds(self):
         return len(self.rounds)
 
@@ -191,6 +194,15 @@ class Tournaments:
             all_players_id.append(player.doc_id)
         available_players_id = list(set(all_players_id).difference(self.tournament_players_ids))
         return available_players_id
+
+    @property
+    def set_of_pairs(self):
+        list_of_pairs = []
+        for round in self.rounds:
+            for match in round["matches"]:
+                list_of_pairs.append((match[0][0]["id"],match[1][0]["id"]))
+                list_of_pairs.append((match[1][0]["id"], match[0][0]["id"]))
+        return list(set(list_of_pairs))
 
     def check_available_players(self):
         if len(self.available_players) == 0 and self.tournament_nb_of_players > 0:
@@ -215,7 +227,7 @@ class Tournaments:
             print(f"Le tournoi compte maintenant {self.tournament_nb_of_players} joueurs.")
             if self.tournament_nb_of_players == 8:
                 self.generate_round()
-                self.generate_matches(0)
+                self.generate_matches(1)
                 DB.update_record_data("tournaments",self.id,"rounds",self.rounds)
                 print("Le premier round du tournoi a été généré.")
 
