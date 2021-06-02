@@ -61,20 +61,27 @@ class Players:
                          id=player_id)
         return new_player
 
-    def add_player_to_tournament(self,tournament_id):
-        players = DB.get_record_data("tournaments",tournament_id,"players")
-        if len(players) >= 8:
-            print("Ce tournoi compte déjà 8 joueurs.")
+    @classmethod
+    def check_if_any_player(cls,display1=True,display2=True):
+        if len(PLAYERS_TABLE) == 0:
+            if display1 == True:
+                print("Aucun joueur n'est enregistré dans la base de données.")
+            return False
         else:
-            DB.update_record_data("tournaments", tournament_id, "players", self.__dict__, True)
+            if display2 == True:
+                print("Voici la liste des joueurs enregistrés dans la base:")
+                for player in PLAYERS_TABLE:
+                    print(player.doc_id, "->", player["first_name"], player["family_name"],
+                          "| Classement actuel ->", player["ranking"])
+                print()
+            return True
+
+    @classmethod
+    def list_of_ids(cls):
+        return [player.doc_id for player in PLAYERS_TABLE]
 
     def __str__(self):
-        return (f"Players(first_name={self.first_name},"
-              f"family_name={self.family_name},"
-              f"birth_date={self.birth_date},"
-              f"sex={self.sex},"
-              f"ranking={self.ranking},"
-              f"id={self.id})")
+        return f"{self.first_name} {self.family_name}"
 
 
 
@@ -105,7 +112,7 @@ class Tournaments:
             """
     global TIME_CONTROL, DB, TOURNAMENTS_TABLE
     def __init__(self, name="", place="", start_date=TODAY, end_date=TODAY,
-                 nb_of_rounds=4, rounds=[], players=[],
+                 rounds=[], players=[],
                  time_control=TIME_CONTROL["1"], description="",
                  id="",
                  add_to_db=False):
@@ -113,12 +120,13 @@ class Tournaments:
         self.place = place
         self.start_date = start_date
         self.end_date = end_date
-        self.nb_of_rounds = nb_of_rounds
+        self.nb_of_rounds = 4
         self.rounds = rounds
         self.players = players
         self.time_control = time_control
         self.description = description
         self.id = id
+        self.tournament_players_ids = []
         if add_to_db:
             serialized_tournament = {}
             for attributes in self.__dict__.items():
@@ -132,13 +140,84 @@ class Tournaments:
                          place=db_tournament["place"],
                          start_date=db_tournament["start_date"],
                          end_date=db_tournament["end_date"],
-                         nb_of_rounds=db_tournament["nb_of_rounds"],
                          rounds=db_tournament["rounds"],
                          players=db_tournament["players"],
                          time_control=db_tournament["time_control"],
                          description=db_tournament["description"],
                          id=tournament_id)
         return new_tournament
+
+    @classmethod
+    def check_if_any_tournament(cls,display=True):
+        if len(TOURNAMENTS_TABLE) == 0:
+            if display == True:
+                print("Aucun tournoi n'est créé dans la base de données.")
+            return False
+        else:
+            print("Voici la liste des tournois créés dans la base:")
+            for tournament in TOURNAMENTS_TABLE:
+                print(tournament.doc_id, "->", tournament["name"])
+            print()
+            return True
+
+    @property
+    def list_of_ids(cls):
+        return [tournament.doc_id for tournament in TOURNAMENTS_TABLE]
+
+    @property
+    def tournament_nb_of_players(self):
+        return len(self.players)
+
+    @property
+    def tournament_nb_of_rounds(self):
+        return len(self.rounds)
+
+    def check_players(self):
+        if self.tournament_nb_of_players == 0:
+            print("Aucun joueur n'est inscrit au", self.name, "pour le moment.")
+        elif self.tournament_nb_of_players > 0:
+            if self.tournament_nb_of_players >= 8:
+                print("Le tournoi est complet.")
+            print("Voici la liste des joueurs déjà inscrits au", self.name, ":")
+            for player in self.players:
+                print(player["id"], "->", player["first_name"], player["family_name"])
+                self.tournament_players_ids.append(player["id"])
+        return
+
+    @property
+    def available_players(self):
+        all_players_id = []
+        for player in PLAYERS_TABLE.all():
+            all_players_id.append(player.doc_id)
+        available_players_id = list(set(all_players_id).difference(self.tournament_players_ids))
+        return available_players_id
+
+    def check_available_players(self):
+        if len(self.available_players) == 0 and self.tournament_nb_of_players > 0:
+            print("Tous les joueurs de la base sont déjà inscrits au", self.name, end=".\n")
+            print("Merci de créer un nouveau joueur avant de l'inscrire au", self.name, end=".\n")
+        else:
+            print("Voici la liste des joueurs enregistrés non inscrits au", self.name, ":")
+            for player in PLAYERS_TABLE:
+                if player.doc_id not in self.tournament_players_ids:
+                    print(player.doc_id, "->", player["first_name"], player["family_name"])
+
+    def add_player_to_tournament(self,player_id):
+        if player_id in self.tournament_players_ids:
+            print("Ce joueur est déjà inscrit au ", self.name, ".",sep="")
+        elif player_id not in self.available_players:
+            print("Choix non valide.")
+        else:
+            new_player = Players().instantiate_from_db(player_id)
+            self.players.append(new_player.__dict__)
+            DB.update_record_data("tournaments",self.id,"players",self.players)
+            print(f"{new_player.first_name} {new_player.family_name} a été inscrit au {self.name}.")
+            print(f"Le tournoi compte maintenant {self.tournament_nb_of_players} joueurs.")
+            if self.tournament_nb_of_players == 8:
+                self.generate_round()
+                self.generate_matches(0)
+                DB.update_record_data("tournaments",self.id,"rounds",self.rounds)
+                print("Le premier round du tournoi a été généré.")
 
     def is_empty(self):
         """
@@ -156,9 +235,11 @@ class Tournaments:
         """
         if len(self.players) == 0:
             print("Aucun joueur n'est inscrit au ", self.name,".",sep="")
-            print()
             return True
         else:
+            print("Voici les inscrits au", self.name, ":")
+            for player in self.players:
+                print(player["id"], "->", player["first_name"], player["family_name"])
             return False
 
     def is_full(self):
@@ -224,10 +305,18 @@ class Tournaments:
                 players have the same number of points.
         """
         players = self.players
+        tournament_scores = {player["id"]:0 for player in self.players}
+        for round in self.rounds:
+            for match in round["matches"]:
+                for score in match:
+                    tournament_scores[score[0]["id"]] += score[1]
+        players = self.players
         new_ranking = []
         for player in players:
-            new_ranking.append({"id":player["id"],"ranking":player["ranking"],"points":0})
-        return sorted(new_ranking,key=lambda x: (x["points"],-int(x["ranking"])),reverse=True)
+            new_ranking.append({"player":player,"ranking":player["ranking"],"points":tournament_scores[player["id"]]})
+        new_ranking = sorted(new_ranking,key=lambda x: (x["points"],-int(x["ranking"])),reverse=True)
+        new_ranking = [element["player"] for element in new_ranking]
+        return new_ranking
 
     def generate_round(self):
         """
@@ -265,14 +354,20 @@ class Tournaments:
         elif int(round_id) == 1:
             sorted_players = sorted(players, key=lambda x: x["ranking"], reverse=False)
             for i in range(4):
-                new_match = Matches(sorted_players[i]["first_name"] + " " +
-                                           sorted_players[i]["family_name"],
-                                           sorted_players[i + 4]["first_name"] + " " +
-                                           sorted_players[i + 4]["family_name"])
+                new_match = Matches(sorted_players[i],
+                                    sorted_players[i + 4])
                 matches.append(new_match.pair)
-            rounds[0]["matches"] = matches
+            rounds[round_id-1]["matches"] = matches
+        else:
+            sorted_players = self.tournament_ranking()
+            for i in range(0,8,2):
+                new_match = Matches(sorted_players[i],
+                                    sorted_players[i + 1])
+                matches.append(new_match.pair)
+            rounds[round_id - 1]["matches"] = matches
             return
-        # TODO Génération des matches pour les tours > tour n° 1
+        # TODO Ajouter la condition que les deux joueurs ne se sont pas déjà affrontés
+        # TODO au cours du tournoi
 
 
 class Rounds:
@@ -323,7 +418,7 @@ class Rounds:
 
 class Matches:
     """
-            A class that represents a round's round.
+            A class that represents a round's match.
 
             Attributes
             ----------
@@ -338,10 +433,17 @@ class Matches:
             sum of points of both players is greater than 0) or False if not
             match_score -> updates the score of the match
             """
-    def __init__(self,player1,player2):
+    def __init__(self,player1,player2,score_player1=0,score_player2=0):
         self.player1 = player1
         self.player2 = player2
-        self.pair = [(player1,0),(player2,0)]
+        self.score_player1 = score_player1
+        self.score_player2 = score_player2
+        self.pair = [(player1,score_player1),(player2,score_player2)]
+
+    def __str__(self):
+        return f"{self.player1['first_name']} {self.player1['family_name']} vs " \
+               f"{self.player2['first_name']} {self.player2['family_name']} \n " \
+               f"Score -> {self.score_player1} - {self.score_player2}"
 
     def match_played(self):
         """
