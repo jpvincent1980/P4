@@ -157,6 +157,7 @@ class AddPlayersToTournament(View):
 
 
 class EnterMatches(View):
+    # TODO A refaire complètement
     def show_menu(self):
         if models.Tournaments().check_if_any_tournament():
             self.ask_for_tournament()
@@ -193,15 +194,14 @@ class EnterMatches(View):
             matches = self.tournament.rounds[self.round_id - 1]["matches"]
         print("Voici les matchs non joués pour ce round:")
         for i,match in enumerate(matches,start=1):
-            instantiated_match = models.Matches(match[0][0],
-                                                match[1][0],
-                                                match[0][1],
-                                                match[1][1])
+            match = ([match[0][0],match[1][0]],[match[0][1],match[1][1]])
+            instantiated_match = models.Matches(match)
             print(i, "->", instantiated_match)
         print("Choisissez le numéro du match:")
         self.match_id = int(input(">>> ") or 0)
         selected_match = matches[self.match_id-1]
-        self.updated_match = models.Matches(selected_match[0][0],selected_match[1][0])
+        match = ([selected_match[0][0]],[selected_match[1][0]]])
+        self.updated_match = models.Matches(match)
         self.ask_for_score()
 
     def ask_for_score(self):
@@ -384,10 +384,7 @@ class DisplayListMatchesByTournament(View):
                         else:
                             matches = tournament.rounds[round_id - 1]["matches"]
                         for i,match in enumerate(matches, start=1):
-                            instantiated_match = models.Matches(match[0][0],
-                                                                match[1][0],
-                                                                match[0][1],
-                                                                match[1][1])
+                            instantiated_match = models.Matches(match)
                             print(i, "->", instantiated_match)
             else:
                 print("Nuémro non valide.")

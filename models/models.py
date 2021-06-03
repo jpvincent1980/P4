@@ -221,7 +221,7 @@ class Tournaments:
             print("Choix non valide.")
         else:
             new_player = Players().instantiate_from_db(player_id)
-            self.players.append(new_player.__dict__)
+            self.players.append(vars(new_player))
             DB.update_record_data("tournaments",self.id,"players",self.players)
             print(f"{new_player.first_name} {new_player.family_name} a été inscrit au {self.name}.")
             print(f"Le tournoi compte maintenant {self.tournament_nb_of_players} joueurs.")
@@ -274,37 +274,11 @@ class Tournaments:
         else:
             return False
 
-
-    def new_pair(self,player1,player2):
-        """
-        Checks if a pair of players have already played against
-        each other during a tournament
-        Returns a boolean (True/False)
-
-            Parameters
-            ----------
-                player1 -> a Players instance
-                player2 -> a Players instance
-
-            Returns
-            -------
-                True if player1 and player2 have never played
-                against each other during the Tournament or
-                False otherwise
-        """
-        rounds = self.rounds
-        for round in rounds:
-            for match in round["matches"]:
-                if match[0][0] == player1 and match[1][0] == player2:
-                    return False
-                elif match[0][0] == player2 and match[1][0] == player1:
-                    return False
-        return True
-
+    @property
     def tournament_ranking(self):
         """
         Generates players ranking for a Tournaments instance
-        Returns a boolean (True/False)
+        Returns a list
 
             Parameters
             ----------
@@ -347,7 +321,7 @@ class Tournaments:
         if len(rounds) < int(self.nb_of_rounds):
             round_number = len(rounds) + 1
             new_round = Rounds("Round " + str(round_number), TODAY, NOW)
-            self.rounds.append(new_round.__dict__)
+            self.rounds.append(vars(new_round))
         else:
             print("Le tournoi a atteint son nombre maximal de rondes.")
         return
@@ -366,20 +340,27 @@ class Tournaments:
         elif int(round_id) == 1:
             sorted_players = sorted(players, key=lambda x: x["ranking"], reverse=False)
             for i in range(4):
-                new_match = Matches(sorted_players[i],
-                                    sorted_players[i + 4])
+                match = ([sorted_players[i],0],[sorted_players[i + 4],0])
+                new_match = Matches(match)
                 matches.append(new_match.pair)
             rounds[round_id-1]["matches"] = matches
+            return matches
         else:
-            sorted_players = self.tournament_ranking()
-            for i in range(0,8,2):
-                new_match = Matches(sorted_players[i],
-                                    sorted_players[i + 1])
-                matches.append(new_match.pair)
-            rounds[round_id - 1]["matches"] = matches
-            return
-        # TODO Ajouter la condition que les deux joueurs ne se sont pas déjà affrontés
-        # TODO au cours du tournoi
+            tournament_ranking = self.tournament_ranking
+            set_of_pairs = self.set_of_pairs
+            j = 1
+            while len(tournament_ranking) > 0:
+                i = 0
+                if (tournament_ranking[i]["id"], tournament_ranking[j]["id"]) not in set_of_pairs:
+                    match = ([tournament_ranking[i],0],[tournament_ranking[j],0])
+                    new_match = Matches(match)
+                    matches.append(new_match.pair)
+                    tournament_ranking.pop(j)
+                    tournament_ranking.pop(i)
+                    j = 1
+                else:
+                    j += 1
+            return matches
 
 
 class Rounds:
@@ -400,13 +381,27 @@ class Rounds:
             round_played -> returns True if the round is over (i.e.
             all round's matches have been played) or False if not
             """
-    def __init__(self, name, start_date, start_time):
+    def __init__(self, name="", start_date="", start_time="",
+                 end_date="", end_time="", matches=[]):
         self.name = name
         self.start_date = start_date
         self.start_time = start_time
-        self.end_date = ""
-        self.end_time = ""
-        self.matches = []
+        self.end_date = end_date
+        self.end_time = end_time
+        self.matches = matches
+
+    def __getitem__(self, item):
+        return getattr(self,item)
+
+    @classmethod
+    def instantiate_from_dict(cls,round_dict):
+        new_round = cls(name=round_dict["name"],
+                         start_date=round_dict["start_date"],
+                         start_time=round_dict["start_time"],
+                         end_date=round_dict["end_date"],
+                         end_time=round_dict["end_time"],
+                         matches=round_dict["matches"])
+        return new_round
 
     def round_played(self):
         """
@@ -424,7 +419,8 @@ class Rounds:
                 or False otherwise
         """
         for match in self.matches:
-            if match.match_played is False:
+            instantiated_match = Matches(match)
+            if instantiated_match.match_played is False:
                 return False
             return True
 
@@ -445,12 +441,12 @@ class Matches:
             sum of points of both players is greater than 0) or False if not
             match_score -> updates the score of the match
             """
-    def __init__(self,player1,player2,score_player1=0,score_player2=0):
-        self.player1 = player1
-        self.player2 = player2
-        self.score_player1 = score_player1
-        self.score_player2 = score_player2
-        self.pair = [(player1,score_player1),(player2,score_player2)]
+    def __init__(self,match):
+        self.player1 = match[0][0]
+        self.player2 = match[1][0]
+        self.score_player1 = match[0][1]
+        self.score_player2 = match[1][1]
+        self.pair = ([self.player1,self.score_player1],[self.player2,self.score_player2])
 
     def __str__(self):
         return f"{self.player1['first_name']} {self.player1['family_name']} vs " \
@@ -493,7 +489,7 @@ class Matches:
             -------
                 Nothing
         """
-        self.pair = [(self.player1,score_player1),(self.player2,score_player2)]
+        self.pair = ([self.player1,score_player1],[self.player2,score_player2])
         return
 
 if __name__ == "__main__":
