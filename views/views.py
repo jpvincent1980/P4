@@ -415,11 +415,18 @@ class DisplayRankingByTournament(View):
             tournament_id = int(input(">>> ") or 0)
             if tournament_id in models.Tournaments().list_of_ids:
                 tournament = models.Tournaments().instantiate_from_db(tournament_id)
-                print(f"{'Position':^10}{'Joueur':^20}{'Points':^20}{'Classement':^20}")
-                print("+"*70)
+                if tournament.is_finished:
+                    statut = "définitif"
+                else:
+                    statut = "provisoire"
+                print(f"Le classement {statut} du tournoi est le suivant:\n")
+                print(f"{'Position':^10}{'Joueur':^20}{'Points':^20}")
+                print("+"*50)
                 for i,player in enumerate(tournament.tournament_ranking,start=1):
                     player_name = player["first_name"] + " " + player["family_name"]
-                    print(f"{i:^10}{player_name:^20}{player['score']:^20}{player['ranking']:^20}")
+                    print(f"{i:^10}{player_name:^20}{player['score']:^20}")
+            else:
+                print("Choix non valide.")
 
     def ask_user_choice(self):
         self.back_to_homepage()
