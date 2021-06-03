@@ -202,6 +202,9 @@ class Tournaments:
                 self.generate_matches()
                 DB.update_record_data("tournaments",self.id,"rounds",self.rounds)
                 print("Un nouveau round vient d'être généré pour ce tournoi.")
+        elif self.tournament_nb_of_rounds == self.nb_of_rounds:
+            if len(self.tournament_unfinished_rounds_ids) == 0:
+                self.end_date = TODAY
 
     def check_players(self):
         if self.tournament_nb_of_players == 0:

@@ -16,6 +16,7 @@ LISTS_MENU = {"1": "Liste de tous les joueurs",
               "3": "Liste de tous les tournois",
               "4": "Liste de tous les tours d'un tournoi",
               "5": "Liste de tous les matchs d'un tournoi",
+              "6": "Classement d'un tournoi",
               "8": "Retour au menu principal",
               "9": "Quitter le programme"}
 
@@ -281,6 +282,8 @@ class DisplayList(View):
             return DisplayListRoundsByTournament()
         elif choice == "5":
             return DisplayListMatchesByTournament()
+        elif choice == "6":
+            return DisplayRankingByTournament()
         elif choice == "8":
             return HomePage()
         elif choice == "9":
@@ -396,9 +399,27 @@ class DisplayListMatchesByTournament(View):
                                 print(instantiated_match)
                             print("+" * 50)
             else:
-                print("Nuémro non valide.")
+                print("Numéro non valide.")
         else:
             pass
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class DisplayRankingByTournament(View):
+    def show_menu(self):
+        if models.Tournaments().check_if_any_tournament():
+            print("Merci de saisir un numéro de tournoi:")
+            tournament_id = int(input(">>> ") or 0)
+            if tournament_id in models.Tournaments().list_of_ids:
+                tournament = models.Tournaments().instantiate_from_db(tournament_id)
+                print(f"{'Position':^10}{'Joueur':^20}{'Points':^20}{'Classement':^20}")
+                print("+"*70)
+                for i,player in enumerate(tournament.tournament_ranking,start=1):
+                    player_name = player["first_name"] + " " + player["family_name"]
+                    print(f"{i:^10}{player_name:^20}{player['score']:^20}{player['ranking']:^20}")
 
     def ask_user_choice(self):
         self.back_to_homepage()
