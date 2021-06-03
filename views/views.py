@@ -158,63 +158,71 @@ class AddPlayersToTournament(View):
 
 class EnterMatches(View):
     # TODO A refaire complètement
+
     def show_menu(self):
         if models.Tournaments().check_if_any_tournament():
             self.ask_for_tournament()
-        else:
-            pass
 
     def ask_for_tournament(self):
         print("Entrez le numéro du tournoi:")
         self.tournament_id = int(input(">>> ") or 0)
-        self.tournament = models.Tournaments().instantiate_from_db(self.tournament_id)
-        if self.tournament.is_empty():
-            print(f"Merci d'aller inscrire plus de joueurs afin que le tournoi soit complet.")
-        elif not self.tournament.is_full():
-            print(f"Il n'y a que {len(self.tournament.players)} joueur(s) inscrit(s) sur 8.\n"
-                  f"Merci d'aller inscrire plus de joueurs afin que le tournoi soit complet.")
-        elif len(self.tournament.rounds) == 0:
-            self.tournament.generate_round()
-            self.ask_for_round()
+        if self.tournament_id in models.Tournaments().list_of_ids:
+            self.tournament = models.Tournaments().instantiate_from_db(self.tournament_id)
+            if self.tournament.is_empty(display=False):
+                print(f"Merci d'aller inscrire plus de joueurs afin que le tournoi soit complet.")
+            elif not self.tournament.is_full():
+                print(f"Il n'y a que {len(self.tournament.players)} joueur(s) inscrit(s) sur 8.\n"
+                      f"Merci d'aller inscrire plus de joueurs afin que le tournoi soit complet.")
+            else:
+                self.ask_for_round()
         else:
-            self.ask_for_round()
+            print("Numéro non valide.")
 
     def ask_for_round(self):
-        print("Voici les tours non terminés pour ce tournoi:")
-        for i,round in enumerate(self.tournament.rounds,start=1):
-            print(i, "->", round["name"])
-        print("Entrez le numéro du round:")
-        self.round_id = int(input(">>> ") or 0)
-        self.ask_for_match()
+        if len(self.tournament.tournament_unfinished_rounds_ids) > 0:
+            print("Voici les tours non terminés pour ce tournoi:")
+            # TODO Ajouter une condition pour filtrer les rounds non terminés
+            for i,round in enumerate(self.tournament.rounds,start=1):
+                instantiated_round = models.Rounds().instantiate_from_dict(round)
+                if not instantiated_round.round_played():
+                    print(i, "->", round["name"])
+            print("Entrez le numéro du round:")
+            self.round_id = int(input(">>> ") or 0)
+            if self.round_id in self.tournament.tournament_rounds_ids:
+                self.ask_for_match()
+            else:
+                print("Numéro non valide.")
+        else:
+            print("Tous les rounds de ce tournoi sont terminés.")
 
     def ask_for_match(self):
-        matches = self.tournament.rounds[self.round_id-1]["matches"]
-        if len(matches) == 0:
-            self.tournament.generate_matches(self.round_id)
-            matches = self.tournament.rounds[self.round_id - 1]["matches"]
-        print("Voici les matchs non joués pour ce round:")
-        for i,match in enumerate(matches,start=1):
-            match = ([match[0][0],match[1][0]],[match[0][1],match[1][1]])
-            instantiated_match = models.Matches(match)
-            print(i, "->", instantiated_match)
-        print("Choisissez le numéro du match:")
+        self.round = models.Rounds().instantiate_from_dict(self.tournament.rounds[self.round_id-1])
+        print("Voici les matchs non terminés pour ce tour:")
+        for i, match in enumerate(self.round["matches"],start=1):
+            match = models.Matches(match)
+            if not match.match_played():
+                print(i, "->", match)
+        print("Entrez le numéro du match:")
         self.match_id = int(input(">>> ") or 0)
-        selected_match = matches[self.match_id-1]
-        match = ([selected_match[0][0]],[selected_match[1][0]]])
-        self.updated_match = models.Matches(match)
-        self.ask_for_score()
+        if self.match_id in self.round.list_of_unplayed_matches_ids:
+            self.ask_for_score()
+        else:
+            print("Choix non valide.")
 
     def ask_for_score(self):
-        print(f"Entrez le score de {self.updated_match.player1['first_name']} "
-              f"{self.updated_match.player1['family_name']}:")
-        score_player1 = float(input(">>> "))
-        print(f"Entrez le score de {self.updated_match.player2['first_name']} "
-              f"{self.updated_match.player2['family_name']}:")
-        score_player2 = float(input(">>> "))
-        self.updated_match.match_score(score_player1,score_player2)
-        self.tournament.rounds[self.round_id - 1]["matches"][self.match_id-1] = self.updated_match.pair
+        selected_match = self.round["matches"][self.match_id-1]
+        self.match = models.Matches(selected_match)
+        player1 = self.match.player1["first_name"] + " " + self.match.player1["family_name"]
+        player2 = self.match.player2["first_name"] + " " + self.match.player2["family_name"]
+        print(f"Entrez le score de {player1} :")
+        score_player1 = float(input(">>> ") or 0)
+        print(f"Entrez le score de {player2}:")
+        score_player2 = float(input(">>> ") or 0)
+        self.match.match_score(score_player1,score_player2)
+        self.round.matches[self.match_id-1] = self.match.pair
         models.DB.update_record_data("tournaments",self.tournament_id,"rounds",self.tournament.rounds)
         print("Le résultat du match a bien été mis à jour.")
+        self.tournament.check_status()
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -398,11 +406,12 @@ class DisplayListMatchesByTournament(View):
 
 class ExportList(View):
     def show_menu(self):
-        global LISTS_MENU
-        print("Choisissez une liste à exporter parmi les suivantes:")
-        self.menu = LISTS_MENU
-        for key in self.menu.items():
-            print(key[0], ": ", key[1])
+        print("Cette fonctionnalité sera bientôt disponible.")
+        # global LISTS_MENU
+        # print("Choisissez une liste à exporter parmi les suivantes:")
+        # self.menu = LISTS_MENU
+        # for key in self.menu.items():
+        #     print(key[0], ": ", key[1])
 
     def ask_user_choice(self):
         self.back_to_homepage()

@@ -168,12 +168,41 @@ class Tournaments:
         return len(self.players)
 
     @property
+    def tournament_nb_of_rounds(self):
+        return len(self.rounds)
+
+    @property
     def tournament_players_ids(self):
         return [player["id"] for player in self.players]
 
     @property
-    def tournament_nb_of_rounds(self):
-        return len(self.rounds)
+    def tournament_rounds_ids(self):
+        return [i+1 for i in range(len(self.rounds))]
+
+    @property
+    def tournament_unfinished_rounds_ids(self):
+        liste = []
+        for i,round in enumerate(self.rounds,start=1):
+            instantiated_round = Rounds().instantiate_from_dict(round)
+            if not instantiated_round.round_played():
+                liste.append(i)
+        return liste
+
+    @property
+    def is_finished(self):
+        for round in self.rounds:
+            instantiated_round = Rounds().instantiate_from_dict(round)
+            if not instantiated_round.round_played():
+                return False
+        return True
+
+    def check_status(self):
+        if self.tournament_nb_of_rounds < self.nb_of_rounds:
+            if len(self.tournament_unfinished_rounds_ids) == 0:
+                self.generate_round()
+                self.generate_matches()
+                DB.update_record_data("tournaments",self.id,"rounds",self.rounds)
+                print("Un nouveau round vient d'être généré pour ce tournoi.")
 
     def check_players(self):
         if self.tournament_nb_of_players == 0:
@@ -227,11 +256,11 @@ class Tournaments:
             print(f"Le tournoi compte maintenant {self.tournament_nb_of_players} joueurs.")
             if self.tournament_nb_of_players == 8:
                 self.generate_round()
-                self.generate_matches(1)
+                self.generate_matches()
                 DB.update_record_data("tournaments",self.id,"rounds",self.rounds)
                 print("Le premier round du tournoi a été généré.")
 
-    def is_empty(self):
+    def is_empty(self,display=True):
         """
         Check if no player is enlisted to the tournament
         Returns a boolean (True/False)
@@ -246,12 +275,14 @@ class Tournaments:
                 False otherwise
         """
         if len(self.players) == 0:
-            print("Aucun joueur n'est inscrit au ", self.name,".",sep="")
+            if display:
+                print("Aucun joueur n'est inscrit au ", self.name,".",sep="")
             return True
         else:
-            print("Voici les inscrits au", self.name, ":")
-            for player in self.players:
-                print(player["id"], "->", player["first_name"], player["family_name"])
+            if display:
+                print("Voici les inscrits au", self.name, ":")
+                for player in self.players:
+                    print(player["id"], "->", player["first_name"], player["family_name"])
             return False
 
     def is_full(self):
@@ -318,7 +349,7 @@ class Tournaments:
                 None
         """
         rounds = self.rounds
-        if len(rounds) < int(self.nb_of_rounds):
+        if self.tournament_nb_of_rounds < int(self.nb_of_rounds):
             round_number = len(rounds) + 1
             new_round = Rounds("Round " + str(round_number), TODAY, NOW)
             self.rounds.append(vars(new_round))
@@ -326,24 +357,17 @@ class Tournaments:
             print("Le tournoi a atteint son nombre maximal de rondes.")
         return
 
-    def generate_matches(self,round_id):
+    def generate_matches(self):
         matches = []
         players = self.players
-        nb_of_rounds = self.nb_of_rounds
         rounds = self.rounds
-        if len(players) < 8:
-            print(f"Il manque encore {8 - len(players)} joueurs pour que le tournoi soit complet.")
-            return
-        elif int(round_id) > int(nb_of_rounds):
-            print(f"Il n'y a que {nb_of_rounds} tours dans ce tournoi.")
-            return
-        elif int(round_id) == 1:
+        if self.tournament_nb_of_rounds == 1:
             sorted_players = sorted(players, key=lambda x: x["ranking"], reverse=False)
             for i in range(4):
                 match = ([sorted_players[i],0],[sorted_players[i + 4],0])
                 new_match = Matches(match)
                 matches.append(new_match.pair)
-            rounds[round_id-1]["matches"] = matches
+            rounds[0]["matches"] = matches
             return matches
         else:
             tournament_ranking = self.tournament_ranking
@@ -360,6 +384,7 @@ class Tournaments:
                     j = 1
                 else:
                     j += 1
+            rounds[-1]["matches"] = matches
             return matches
 
 
@@ -403,6 +428,16 @@ class Rounds:
                          matches=round_dict["matches"])
         return new_round
 
+    @property
+    def list_of_unplayed_matches_ids(self):
+        liste = []
+        for i, match in enumerate(self.matches,start=1):
+            instantiated_match = Matches(match)
+            if not instantiated_match.match_played():
+                liste.append(i)
+        return liste
+
+
     def round_played(self):
         """
         Checks if all round matches have been played hence
@@ -420,9 +455,9 @@ class Rounds:
         """
         for match in self.matches:
             instantiated_match = Matches(match)
-            if instantiated_match.match_played is False:
+            if instantiated_match.match_played() is False:
                 return False
-            return True
+        return True
 
 class Matches:
     """
@@ -446,12 +481,15 @@ class Matches:
         self.player2 = match[1][0]
         self.score_player1 = match[0][1]
         self.score_player2 = match[1][1]
-        self.pair = ([self.player1,self.score_player1],[self.player2,self.score_player2])
 
     def __str__(self):
         return f"{self.player1['first_name']} {self.player1['family_name']} vs " \
                f"{self.player2['first_name']} {self.player2['family_name']} \n " \
                f"Score -> {self.score_player1} - {self.score_player2}"
+
+    @property
+    def pair(self):
+        return [[self.player1,self.score_player1],[self.player2,self.score_player2]]
 
     def match_played(self):
         """
@@ -468,7 +506,7 @@ class Matches:
                 of both players score is greater than 0
                 or False otherwise
         """
-        somme = self.pair[0][1] + self.pair[1][1]
+        somme = self.score_player1 + self.score_player2
         if somme > 0:
             return True
         else:
@@ -489,7 +527,8 @@ class Matches:
             -------
                 Nothing
         """
-        self.pair = ([self.player1,score_player1],[self.player2,score_player2])
+        self.score_player1 = score_player1
+        self.score_player2 = score_player2
         return
 
 if __name__ == "__main__":
