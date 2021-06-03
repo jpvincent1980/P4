@@ -218,11 +218,17 @@ class EnterMatches(View):
         score_player1 = float(input(">>> ") or 0)
         print(f"Entrez le score de {player2}:")
         score_player2 = float(input(">>> ") or 0)
-        self.match.match_score(score_player1,score_player2)
-        self.round.matches[self.match_id-1] = self.match.pair
-        models.DB.update_record_data("tournaments",self.tournament_id,"rounds",self.tournament.rounds)
-        print("Le résultat du match a bien été mis à jour.")
-        self.tournament.check_status()
+        if (score_player1 and score_player2) in models.POINTS_LIST and \
+                score_player1 + score_player2 == 1:
+            self.match.match_score(score_player1,score_player2)
+            self.round.matches[self.match_id-1] = self.match.pair
+            models.DB.update_record_data("tournaments",self.tournament_id,"rounds",self.tournament.rounds)
+            print("Le résultat du match a bien été mis à jour.")
+            self.tournament.check_status()
+        else:
+            print(f"La somme des points attribués doit être égale à 1.\n"
+                  f"Les points attribuables ne peuvent être que: "
+                  f"{(models.POINTS_LIST)}")
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -382,18 +388,13 @@ class DisplayListMatchesByTournament(View):
                         print("Aucun round n'existe pour ce tournoi.\n"
                               "Merci de vous assurer qu'il y a bien 8 joueurs inscrits.")
                     else:
-                        print("Merci de sélectionner le round du tournoi en tapant son numéro ->")
                         for i,round in enumerate(tournament.rounds,start=1):
-                            print(i, "->", round["name"])
-                        round_id = int(input(">>> ") or 0)
-                        matches = tournament.rounds[round_id-1]["matches"]
-                        if len(matches) == 0:
-                            print("Aucun match n'existe pour ce round.")
-                        else:
-                            matches = tournament.rounds[round_id - 1]["matches"]
-                        for i,match in enumerate(matches, start=1):
-                            instantiated_match = models.Matches(match)
-                            print(i, "->", instantiated_match)
+                            print(round["name"])
+                            print("+"*50)
+                            for j,match in enumerate(round["matches"],start=1):
+                                instantiated_match = models.Matches(match)
+                                print(instantiated_match)
+                            print("+" * 50)
             else:
                 print("Nuémro non valide.")
         else:

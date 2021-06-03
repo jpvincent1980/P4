@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 # coding: utf-8
-from tinydb import TinyDB
 from models import dbmanager
 import time
 
@@ -306,6 +305,16 @@ class Tournaments:
             return False
 
     @property
+    def tournament_scores(self):
+        tournament_scores = {player["id"]:0 for player in self.players}
+        for round in self.rounds:
+            for match in round["matches"]:
+                for score in match:
+                    tournament_scores[score[0]["id"]] += score[1]
+        return tournament_scores
+
+
+    @property
     def tournament_ranking(self):
         """
         Generates players ranking for a Tournaments instance
@@ -321,18 +330,15 @@ class Tournaments:
                 ranked by points and then by ranking if several
                 players have the same number of points.
         """
-        players = self.players
-        tournament_scores = {player["id"]:0 for player in self.players}
-        for round in self.rounds:
-            for match in round["matches"]:
-                for score in match:
-                    tournament_scores[score[0]["id"]] += score[1]
+        tournament_scores = self.tournament_scores
         players = self.players
         new_ranking = []
         for player in players:
             new_ranking.append({"player":player,"ranking":player["ranking"],"points":tournament_scores[player["id"]]})
         new_ranking = sorted(new_ranking,key=lambda x: (x["points"],-int(x["ranking"])),reverse=True)
         new_ranking = [element["player"] for element in new_ranking]
+        for player in new_ranking:
+            player.update({"score":tournament_scores[player["id"]]})
         return new_ranking
 
     def generate_round(self):
