@@ -20,12 +20,11 @@ LISTS_MENU = {"1": "Liste de tous les joueurs",
               "8": "Retour au menu principal",
               "9": "Quitter le programme"}
 
-SORTING_MENU = {"1": "ordre alphabétique",
-                "2": "classement"}
+SORTING_MENU = {"1": "Ordre alphabétique",
+                "2": "Classement"}
 
 
 class View:
-
     def __init__(self):
         pass
 
@@ -55,7 +54,6 @@ class View:
 
 
 class HomePage(View):
-
     def show_menu(self):
         global MAIN_MENU
         self.menu = MAIN_MENU
@@ -91,17 +89,17 @@ class CreateTournament(View):
     def show_menu(self):
         print("Vous allez créer un nouveau tournoi.")
         name = input("Entrez le nom du tournoi -> ")
-        place = input("Entrez le lieu où se déroule le tournoi -> ") or "Paris"
-        start_date = input("Entrez la date de début du tournoi "
-                           "(JJ/MM/AAAA) -> ") or models.TODAY
-        end_date = input("Entrez la date de fin du tournoi "
-                         "(JJ/MM/AAAA) -> ") or models.TODAY
+        place = input("Entrez le lieu où se déroule le tournoi -> ")
+        time_control = input(f"Entrez le type de contrôle du temps :\n"
+                             f"{models.TIME_CONTROL.items()}\n"
+                             f">>> ")
         description = input("Entrez une description du tournoi "
-                             "-> ") or "Ma description"
+                             "-> ")
         new_tournament = models.Tournaments(name=name,
                                             place=place,
-                                            start_date=start_date,
-                                            end_date=end_date,
+                                            start_date=models.TODAY,
+                                            end_date="",
+                                            time_control=models.TIME_CONTROL[time_control],
                                             description=description,
                                             add_to_db=True)
         print(f"{new_tournament.name} "
@@ -158,8 +156,6 @@ class AddPlayersToTournament(View):
 
 
 class EnterMatches(View):
-    # TODO A refaire complètement
-
     def show_menu(self):
         if models.Tournaments().check_if_any_tournament():
             self.ask_for_tournament()
@@ -182,7 +178,6 @@ class EnterMatches(View):
     def ask_for_round(self):
         if len(self.tournament.tournament_unfinished_rounds_ids) > 0:
             print("Voici les tours non terminés pour ce tournoi:")
-            # TODO Ajouter une condition pour filtrer les rounds non terminés
             for i,round in enumerate(self.tournament.rounds,start=1):
                 instantiated_round = models.Rounds().instantiate_from_dict(round)
                 if not instantiated_round.round_played():
@@ -213,8 +208,8 @@ class EnterMatches(View):
     def ask_for_score(self):
         selected_match = self.round["matches"][self.match_id-1]
         self.match = models.Matches(selected_match)
-        player1 = self.match.player1["first_name"] + " " + self.match.player1["family_name"]
-        player2 = self.match.player2["first_name"] + " " + self.match.player2["family_name"]
+        player1 = self.match._player1["first_name"] + " " + self.match._player1["family_name"]
+        player2 = self.match._player2["first_name"] + " " + self.match._player2["family_name"]
         print(f"Entrez le score de {player1} :")
         score_player1 = float(input(">>> ") or 0)
         print(f"Entrez le score de {player2}:")
@@ -222,6 +217,9 @@ class EnterMatches(View):
         if (score_player1 and score_player2) in models.POINTS_LIST and \
                 score_player1 + score_player2 == 1:
             self.match.match_score(score_player1,score_player2)
+            if self.match_id == 4:
+                self.tournament.rounds[self.round_id-1]["end_date"] = models.TODAY
+                self.tournament.rounds[self.round_id-1]["end_time"] = models.NOW
             self.round.matches[self.match_id-1] = self.match.pair
             models.DB.update_record_data("tournaments",self.tournament_id,"rounds",self.tournament.rounds)
             print("Le résultat du match a bien été mis à jour.")
@@ -332,7 +330,25 @@ class DisplayListPlayersByTournament(View):
             tournament_id = int(input(">>> ") or 0)
             if tournament_id in models.Tournaments().list_of_ids:
                 tournament = models.Tournaments().instantiate_from_db(tournament_id)
-                tournament.is_empty()
+                tournament.is_empty(display2=False)
+                print("Affichez la liste des joueurs par:")
+                for element in SORTING_MENU.items():
+                    print(element[0], ":", element[1])
+                ranking_sort = input(">>> ")
+                if ranking_sort == "1":
+                    for player in sorted(tournament.players, key=lambda x: x['family_name']):
+                        print(player["first_name"],
+                              player["family_name"],
+                              "| Classement -> n°",
+                              player["ranking"])
+                elif ranking_sort == "2":
+                    for player in sorted(tournament.players, key=lambda x: int(x['ranking'])):
+                        print(player["first_name"],
+                              player["family_name"],
+                              "| Classement -> n°",
+                              player["ranking"])
+                else:
+                    print("Choix non valide.")
             else:
                 print("Numéro non valide.")
         self.back_to_homepage()

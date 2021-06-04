@@ -1,7 +1,5 @@
 #! /usr/bin/env python3
 # coding: utf-8
-import inspect
-
 from tinydb import TinyDB
 
 class DBManager:
@@ -26,7 +24,6 @@ class DBManager:
         with its doc_id (record_id) for a specific table (table_name) or only
         a specific key (data_key) of this record.
         """
-    pass
 
     def __init__(self, db_name, *table_name):
         self.DB = TinyDB(db_name)

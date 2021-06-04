@@ -2,6 +2,7 @@
 # coding: utf-8
 from models import dbmanager
 import time
+import datetime
 
 TIME_CONTROL = {"1": "Bullet",
                 "2": "Blitz",
@@ -42,12 +43,24 @@ class Players:
         self.birth_date = birth_date
         self.sex = sex
         self.ranking = ranking
-        self.id = id
+        self._id = id
         if add_to_db:
             serialized_player = {}
             for attributes in self.__dict__.items():
                 serialized_player[attributes[0]] = attributes[1]
             DB.add_record("players", serialized_player)
+
+    @property
+    def birth_date(self):
+        return self.birth_date
+
+    @birth_date.setter
+    def birth_date(self,birth_date):
+        try:
+            datetime.datetime.strptime(birth_date,"%d/%M/%Y")
+        except ValueError:
+            print("La date doit être au format JJ/MM/AAAA.")
+
 
     @classmethod
     def instantiate_from_db(cls,player_id):
@@ -117,14 +130,14 @@ class Tournaments:
                  add_to_db=False):
         self.name = name
         self.place = place
-        self.start_date = start_date
-        self.end_date = end_date
+        self._start_date = start_date
+        self._end_date = end_date
         self.nb_of_rounds = 4
         self.rounds = rounds
         self.players = players
         self.time_control = time_control
         self.description = description
-        self.id = id
+        self._id = id
         if add_to_db:
             serialized_tournament = {}
             for attributes in self.__dict__.items():
@@ -136,8 +149,8 @@ class Tournaments:
         db_tournament = DB.get_record_data("tournaments",int(tournament_id))
         new_tournament = cls(name=db_tournament["name"],
                          place=db_tournament["place"],
-                         start_date=db_tournament["start_date"],
-                         end_date=db_tournament["end_date"],
+                         start_date=db_tournament["_start_date"],
+                         end_date=db_tournament["_end_date"],
                          rounds=db_tournament["rounds"],
                          players=db_tournament["players"],
                          time_control=db_tournament["time_control"],
@@ -200,11 +213,12 @@ class Tournaments:
             if len(self.tournament_unfinished_rounds_ids) == 0:
                 self.generate_round()
                 self.generate_matches()
-                DB.update_record_data("tournaments",self.id,"rounds",self.rounds)
+                DB.update_record_data("tournaments",self._id,"rounds",self.rounds)
                 print("Un nouveau round vient d'être généré pour ce tournoi.")
         elif self.tournament_nb_of_rounds == self.nb_of_rounds:
             if len(self.tournament_unfinished_rounds_ids) == 0:
-                self.end_date = TODAY
+                self._end_date = TODAY
+                DB.update_record_data("tournaments", self._id, "_end_date", self._end_date)
 
     def check_players(self):
         if self.tournament_nb_of_players == 0:
@@ -262,7 +276,7 @@ class Tournaments:
                 DB.update_record_data("tournaments",self.id,"rounds",self.rounds)
                 print("Le premier round du tournoi a été généré.")
 
-    def is_empty(self,display=True):
+    def is_empty(self,display1=True,display2=True):
         """
         Check if no player is enlisted to the tournament
         Returns a boolean (True/False)
@@ -277,11 +291,11 @@ class Tournaments:
                 False otherwise
         """
         if len(self.players) == 0:
-            if display:
+            if display1:
                 print("Aucun joueur n'est inscrit au ", self.name,".",sep="")
             return True
         else:
-            if display:
+            if display2:
                 print("Voici les inscrits au", self.name, ":")
                 for player in self.players:
                     print(player["id"], "->", player["first_name"], player["family_name"])
@@ -418,22 +432,22 @@ class Rounds:
     def __init__(self, name="", start_date="", start_time="",
                  end_date="", end_time="", matches=[]):
         self.name = name
-        self.start_date = start_date
-        self.start_time = start_time
-        self.end_date = end_date
-        self.end_time = end_time
+        self._start_date = start_date
+        self._start_time = start_time
+        self._end_date = end_date
+        self._end_time = end_time
         self.matches = matches
 
     def __getitem__(self, item):
-        return getattr(self,item)
+        return getattr(self, item)
 
     @classmethod
     def instantiate_from_dict(cls,round_dict):
         new_round = cls(name=round_dict["name"],
-                         start_date=round_dict["start_date"],
-                         start_time=round_dict["start_time"],
-                         end_date=round_dict["end_date"],
-                         end_time=round_dict["end_time"],
+                         start_date=round_dict["_start_date"],
+                         start_time=round_dict["_start_time"],
+                         end_date=round_dict["_end_date"],
+                         end_time=round_dict["_end_time"],
                          matches=round_dict["matches"])
         return new_round
 
@@ -486,19 +500,19 @@ class Matches:
             match_score -> updates the score of the match
             """
     def __init__(self,match):
-        self.player1 = match[0][0]
-        self.player2 = match[1][0]
-        self.score_player1 = match[0][1]
-        self.score_player2 = match[1][1]
+        self._player1 = match[0][0]
+        self._player2 = match[1][0]
+        self._score_player1 = match[0][1]
+        self._score_player2 = match[1][1]
 
     def __str__(self):
-        return f"{self.player1['first_name']} {self.player1['family_name']} vs " \
-               f"{self.player2['first_name']} {self.player2['family_name']} \n " \
-               f"Score -> {self.score_player1} - {self.score_player2}"
+        return f"{self._player1['first_name']} {self._player1['family_name']} vs " \
+               f"{self._player2['first_name']} {self._player2['family_name']} \n " \
+               f"Score -> {self._score_player1} - {self._score_player2}"
 
     @property
     def pair(self):
-        return [[self.player1,self.score_player1],[self.player2,self.score_player2]]
+        return [[self._player1,self._score_player1],[self._player2,self._score_player2]]
 
     def match_played(self):
         """
@@ -515,7 +529,7 @@ class Matches:
                 of both players score is greater than 0
                 or False otherwise
         """
-        somme = self.score_player1 + self.score_player2
+        somme = self._score_player1 + self._score_player2
         if somme > 0:
             return True
         else:
@@ -536,8 +550,8 @@ class Matches:
             -------
                 Nothing
         """
-        self.score_player1 = score_player1
-        self.score_player2 = score_player2
+        self._score_player1 = score_player1
+        self._score_player2 = score_player2
         return
 
 if __name__ == "__main__":
