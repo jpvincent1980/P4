@@ -161,15 +161,16 @@ class Tournaments:
         return new_tournament
 
     @classmethod
-    def check_if_any_tournament(cls,display=True):
+    def check_if_any_tournament(cls,display1=True,display2=True):
         if len(TOURNAMENTS_TABLE) == 0:
-            if display == True:
+            if display1 == True:
                 print("Aucun tournoi n'est créé dans la base de données.")
             return False
         else:
-            print("Voici la liste des tournois créés dans la base:")
-            for tournament in TOURNAMENTS_TABLE:
-                print(tournament.doc_id, "->", tournament["name"])
+            if display2 == True:
+                print("Voici la liste des tournois créés dans la base:")
+                for tournament in TOURNAMENTS_TABLE:
+                    print(tournament.doc_id, "->", tournament["name"])
             print()
             return True
 
