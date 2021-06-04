@@ -52,14 +52,16 @@ class Players:
 
     @property
     def birth_date(self):
-        return self.birth_date
+        return self._birth_date
 
     @birth_date.setter
-    def birth_date(self,birth_date):
+    def birth_date(self,date):
         try:
-            datetime.datetime.strptime(birth_date,"%d/%M/%Y")
+            datetime.datetime.strptime(date,"%d/%M/%Y")
+            self._birth_date = date
         except ValueError:
             print("La date doit être au format JJ/MM/AAAA.")
+            self._birth_date = input(">>> ")
 
 
     @classmethod
