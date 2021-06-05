@@ -165,7 +165,7 @@ class EnterMatches(View):
         self.tournament_id = int(input(">>> ") or 0)
         if self.tournament_id in models.Tournaments().list_of_ids:
             self.tournament = models.Tournaments().instantiate_from_db(self.tournament_id)
-            if self.tournament.is_empty(display=False):
+            if self.tournament.is_empty(display2=False):
                 print(f"Merci d'aller inscrire plus de joueurs afin que le tournoi soit complet.")
             elif not self.tournament.is_full():
                 print(f"Il n'y a que {len(self.tournament.players)} joueur(s) inscrit(s) sur 8.\n"
@@ -218,8 +218,8 @@ class EnterMatches(View):
                 score_player1 + score_player2 == 1:
             self.match.match_score(score_player1,score_player2)
             if self.match_id == 4:
-                self.tournament.rounds[self.round_id-1]["end_date"] = models.TODAY
-                self.tournament.rounds[self.round_id-1]["end_time"] = models.NOW
+                self.tournament.rounds[self.round_id-1]["_end_date"] = models.TODAY
+                self.tournament.rounds[self.round_id-1]["_end_time"] = models.NOW
             self.round.matches[self.match_id-1] = self.match.pair
             models.DB.update_record_data("tournaments",self.tournament_id,"rounds",self.tournament.rounds)
             print("Le résultat du match a bien été mis à jour.")
@@ -304,11 +304,11 @@ class DisplayListPlayers(DisplayList):
             if ranking_sort == "1":
                 for player in sorted(models.PLAYERS_TABLE, key=lambda x:x['family_name']):
                     print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                          f"{player['birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
+                          f"{player['_birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
             elif ranking_sort == "2":
                 for player in sorted(models.PLAYERS_TABLE, key=lambda x:int(x['ranking'])):
                     print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                          f"{player['birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
+                          f"{player['_birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
             else:
                 print("Choix non valide.")
                 return
@@ -339,11 +339,11 @@ class DisplayListPlayersByTournament(View):
                     if ranking_sort == "1":
                         for player in sorted(tournament.players, key=lambda x: x['family_name']):
                             print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                                  f"{player['birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
+                                  f"{player['_birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
                     elif ranking_sort == "2":
                         for player in sorted(tournament.players, key=lambda x: int(x['ranking'])):
                             print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                                  f"{player['birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
+                                  f"{player['_birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
             else:
                 print("Choix non valide.")
         self.back_to_homepage()
@@ -468,6 +468,16 @@ class ExportList(View):
         # self.menu = LISTS_MENU
         # for key in self.menu.items():
         #     print(key[0], ": ", key[1])
+        # def export_list(filename, columns, data_list):
+        #     with open(filename, "w", newline="", encoding="utf-8") as csvfile:
+        #         columns = columns
+        #         writer = csv.DictWriter(csvfile, fieldnames=columns)
+        #         writer.writeheader()
+        #         writer.writerows(data_list)
+        # Exemples:
+        # export_list("Exportplayers.csv", list(models.Players().__dict__.keys()), models.PLAYERS_TABLE.all())
+        # export_list("Exporttournaments.csv.", list(models.Tournaments().__dict__.keys()),
+        #             models.TOURNAMENTS_TABLE.all())
 
     def ask_user_choice(self):
         self.back_to_homepage()

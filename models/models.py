@@ -60,8 +60,8 @@ class Players:
             datetime.datetime.strptime(date,"%d/%M/%Y")
             self._birth_date = date
         except ValueError:
-            print("La date doit être au format JJ/MM/AAAA.")
-            self._birth_date = input(">>> ")
+            # print("La date doit être au format JJ/MM/AAAA.")
+            self._birth_date = ""
 
 
     @classmethod
