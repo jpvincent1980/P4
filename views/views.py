@@ -1,24 +1,11 @@
 #! /usr/bin/env python3
 # coding: utf-8
-from models import models
+from controllers import controller as ct
+from models import player as pl
+from models import tournament as tr
+from models import round as rn
+from models import match as mt
 
-MAIN_MENU = {"1": "Créer un nouveau tournoi",
-             "2": "Créer un nouveau joueur",
-             "3": "Inscrire un joueur à un tournoi",
-             "4": "Entrer les résultats d'un match",
-             "5": "Entrer le classement d'un joueur",
-             "6": "Afficher une liste",
-             "7": "Exporter une liste",
-             "9": "Quitter le programme"}
-
-LISTS_MENU = {"1": "Liste de tous les joueurs",
-              "2": "Liste de tous les joueurs d'un tournoi",
-              "3": "Liste de tous les tournois",
-              "4": "Liste de tous les tours d'un tournoi",
-              "5": "Liste de tous les matchs d'un tournoi",
-              "6": "Classement d'un tournoi",
-              "8": "Retour au menu principal",
-              "9": "Quitter le programme"}
 
 SORTING_MENU = {"1": "Ordre alphabétique",
                 "2": "Classement"}
@@ -51,247 +38,280 @@ class View:
         print()
         print("Tapez Entrée pour revenir au menu principal.")
         input(">>> ")
+        return HomePage()
 
 
 class HomePage(View):
     def show_menu(self):
-        global MAIN_MENU
-        self.menu = MAIN_MENU
+        self.menu = ct.MAIN_MENU
         self.show_welcome_message()
         for key in self.menu.items():
             print(key[0], ": ", key[1])
 
     def ask_user_choice(self):
-        choice = input(">>> ")
-        if choice not in self.menu:
-            print("Choix non valide. Veuillez ressaisir un choix "
-                  "parmi la liste.")
-            return HomePage()
-        elif choice == "1":
-            return CreateTournament()
-        elif choice == "2":
-            return CreatePlayer()
-        elif choice == "3":
-            return AddPlayersToTournament()
-        elif choice == "4":
-            return EnterMatches()
-        elif choice == "5":
-            return EnterRankings()
-        elif choice == "6":
-            return DisplayList()
-        elif choice == "7":
-            return ExportList()
-        elif choice == "9":
-            return EndPage()
+        return input(">>> ")
 
 
-class CreateTournament(View):
+class NoTournament(View):
+    def show_menu(self):
+        print("Aucun tournoi n'est créé dans la base de données.")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class UnknownTournament(View):
+    def show_menu(self):
+        print("Numéro de tournoi non valide.")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class NoPlayer(View):
+    def show_menu(self):
+        print("Aucun joueur n'est créé dans la base de données.")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class UnknownPlayer(View):
+    def show_menu(self):
+        print("Numéro de joueur non valide.")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class CreateTournamentView(View):
     def show_menu(self):
         print("Vous allez créer un nouveau tournoi.")
-        name = input("Entrez le nom du tournoi -> ")
-        place = input("Entrez le lieu où se déroule le tournoi -> ")
-        time_control = input(f"Entrez le numéro du type de contrôle du temps :\n"
-                             f"{models.TIME_CONTROL}\n"
+
+    def ask_user_choice(self):
+        self.name = input("Entrez le nom du tournoi -> ")
+        self.place = input("Entrez le lieu où se déroule le tournoi -> ")
+        self.time_control = input(f"Entrez le numéro du type de contrôle du temps :\n"
+                             f"{tr.TIME_CONTROL}\n"
                              f">>> ")
-        description = input("Entrez une description du tournoi "
+        self.description = input("Entrez une description du tournoi "
                              "-> ")
-        new_tournament = models.Tournaments(name=name,
-                                            place=place,
-                                            start_date=models.TODAY,
-                                            end_date="",
-                                            time_control=models.TIME_CONTROL[time_control],
-                                            description=description,
-                                            add_to_db=True)
-        print(f"{new_tournament.name} "
-              f"a été ajouté à notre base de données.")
+        return
+
+
+class TournamentCreationValidationView(View):
+    def __init__(self,tournament_name):
+        self.tournament_name = tournament_name
+
+    def show_menu(self):
+        print(f"{self.tournament_name} a bien été créé dans notre base.")
 
     def ask_user_choice(self):
         self.back_to_homepage()
         return HomePage()
 
 
-class CreatePlayer(View):
+class CreatePlayerView(View):
     def show_menu(self):
         print("Vous allez créer un nouveau joueur.")
-        first_name = input("Entrez le prénom du joueur -> ")
-        family_name = input("Entrez le nom du joueur -> ")
-        birth_date = input("Entrez la date de naissance du joueur "
+
+
+    def ask_user_choice(self):
+        self.first_name = input("Entrez le prénom du joueur -> ")
+        self.family_name = input("Entrez le nom du joueur -> ")
+        self.birth_date = input("Entrez la date de naissance du joueur "
                            "(JJ/MM/AAAA) -> ")
-        sex = input("Entrez le sexe du joueur (H/F) -> ")
-        ranking = input("Entrez le classement du joueur -> ")
-        new_player = models.Players(first_name=first_name,
-                                    family_name=family_name,
-                                    birth_date=birth_date,
-                                    sex=sex,
-                                    ranking=ranking, add_to_db=True)
-        print(f"{new_player.first_name} {new_player.family_name} "
-              f"a été ajouté à notre base de données.")
-        print()
+        self.sex = input("Entrez le sexe du joueur (H/F) -> ")
+        self.ranking = input("Entrez le classement du joueur -> ")
+        return
+
+
+class PlayerCreationValidationView(View):
+    def __init__(self,player_full_name):
+        self.player_full_name = player_full_name
+
+    def show_menu(self):
+        print(f"{self.player_full_name} a bien été créé dans notre base.")
 
     def ask_user_choice(self):
         self.back_to_homepage()
         return HomePage()
 
 
-class AddPlayersToTournament(View):
+class AddPlayerToTournamentView(View):
     def show_menu(self):
-        if models.Tournaments().check_if_any_tournament():
-            print("Entrez le numéro du tournoi:")
-            tournament_id = int(input(">>> ") or 0)
-            if tournament_id in models.Tournaments().list_of_ids:
-                tournament = models.Tournaments().instantiate_from_db(tournament_id)
-                tournament.check_players()
-                if tournament.tournament_nb_of_players < 8:
-                    if models.Players().check_if_any_player(display2=False):
-                        tournament.check_available_players()
-                        print("Entrez le numéro du joueur à inscrire au", tournament.name,":")
-                        player_id = int(input(">>> ") or 0)
-                        tournament.add_player_to_tournament(player_id)
-            else:
-                print("Numéro non valide.")
+        print(f"Choisissez un tournoi parmi les suivants:")
+        for id,name in tr.Tournament.available_tournaments().items():
+            print(f"{id} -> {name}")
 
     def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class EnterMatches(View):
-    def show_menu(self):
-        if models.Tournaments().check_if_any_tournament():
-            self.ask_for_tournament()
-
-    def ask_for_tournament(self):
-        print("Entrez le numéro du tournoi:")
         self.tournament_id = int(input(">>> ") or 0)
-        if self.tournament_id in models.Tournaments().list_of_ids:
-            self.tournament = models.Tournaments().instantiate_from_db(self.tournament_id)
-            if self.tournament.is_empty(display2=False):
-                print(f"Merci d'aller inscrire plus de joueurs afin que le tournoi soit complet.")
-            elif not self.tournament.is_full():
-                print(f"Il n'y a que {len(self.tournament.players)} joueur(s) inscrit(s) sur 8.\n"
-                      f"Merci d'aller inscrire plus de joueurs afin que le tournoi soit complet.")
-            else:
-                self.ask_for_round()
-        else:
-            print("Numéro non valide.")
+        return self.tournament_id
 
-    def ask_for_round(self):
-        if len(self.tournament.tournament_unfinished_rounds_ids) > 0:
-            print("Voici les tours non terminés pour ce tournoi:")
-            for i,round in enumerate(self.tournament.rounds,start=1):
-                instantiated_round = models.Rounds().instantiate_from_dict(round)
-                if not instantiated_round.round_played():
-                    print(i, "->", round["name"])
-            print("Entrez le numéro du round:")
-            self.round_id = int(input(">>> ") or 0)
-            if self.round_id in self.tournament.tournament_rounds_ids:
-                self.ask_for_match()
-            else:
-                print("Numéro non valide.")
-        else:
-            print("Tous les rounds de ce tournoi sont terminés.")
 
-    def ask_for_match(self):
-        self.round = models.Rounds().instantiate_from_dict(self.tournament.rounds[self.round_id-1])
-        print("Voici les matchs non terminés pour ce tour:")
-        for i, match in enumerate(self.round["matches"],start=1):
-            match = models.Matches(match)
-            if not match.match_played():
-                print(i, "->", match)
-        print("Entrez le numéro du match:")
+class DisplayAvailablePlayers(View):
+    def __init__(self, liste):
+        self.players_available_ids = liste
+
+    def show_menu(self):
+        print(f"Choisissez un joueur parmi les suivants:")
+        for id in self.players_available_ids:
+            print(f"{id} -> {pl.DB.get_record_data('players',id)['first_name']} "
+                  f"{pl.DB.get_record_data('players',id)['family_name']}")
+
+    def ask_user_choice(self):
+        self.player_id = int(input(">>> ") or 0)
+        return self.player_id
+
+
+class AddPlayerValidationView(View):
+    def __init__(self,player_full_name,tournament_name):
+        self.player_full_name = player_full_name
+        self.tournament_name = tournament_name
+
+    def show_menu(self):
+        print(f"{self.player_full_name} a bien été inscrit au {self.tournament_name}.")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class EnterMatchScoreView(View):
+    def show_menu(self):
+        print(f"Choisissez un tournoi parmi les suivants:")
+        for tournament in tr.Tournament.full_tournaments():
+            print(f"{tournament['_id']} -> {tournament['name']}")
+
+    def ask_user_choice(self):
+        self.tournament_id = int(input(">>> ") or 0)
+        return self.tournament_id
+
+
+class DisplayAvailableRounds(View):
+    def __init__(self,tournament):
+        self.tournament = tournament
+
+    def show_menu(self):
+        print(f"Choisissez un round parmi les suivants:")
+        for round in self.tournament.rounds:
+            print(f"{round['name'][-1]} -> {round['name']}")
+
+    def ask_user_choice(self):
+        self.round_id = int(input(">>> ") or 0)
+        return self.round_id
+
+class DisplayAvailableMatches(View):
+    def __init__(self, tournament, round_id):
+        self.tournament = tournament
+        self.round_id = round_id - 1
+
+    def show_menu(self):
+        print(f"Choisissez un match parmi les suivants:")
+        for i,match in enumerate(self.tournament.rounds[self.round_id]["matches"],start=1):
+            match = mt.Match(match)
+            print(f"{i} -> {match}")
+
+    def ask_user_choice(self):
         self.match_id = int(input(">>> ") or 0)
-        if self.match_id in self.round.list_of_unplayed_matches_ids:
-            self.ask_for_score()
-        else:
-            print("Choix non valide.")
+        return self.match_id
 
-    def ask_for_score(self):
+class EnterMatchScoresView(View):
+    def __init__(self, tournament, round_id, match_id):
+        self.tournament = tournament
+        self.round_id = round_id - 1
+        self.match_id = match_id
+
+    def show_menu(self):
+        print(f"Entrez les scores du match {self.match_id}:")
+
+    def ask_user_choice(self):
+        return
+
+    def zask_for_score(self):
         selected_match = self.round["matches"][self.match_id-1]
-        self.match = models.Matches(selected_match)
+        self.match = mt.Match(selected_match)
         player1 = self.match._player1["first_name"] + " " + self.match._player1["family_name"]
         player2 = self.match._player2["first_name"] + " " + self.match._player2["family_name"]
         print(f"Entrez le score de {player1} :")
         score_player1 = float(input(">>> ") or 0)
         print(f"Entrez le score de {player2}:")
         score_player2 = float(input(">>> ") or 0)
-        if (score_player1 and score_player2) in models.POINTS_LIST and \
+        if (score_player1 and score_player2) in mt.POINTS_LIST and \
                 score_player1 + score_player2 == 1:
             self.match.match_score(score_player1,score_player2)
             if self.match_id == 4:
-                self.tournament.rounds[self.round_id-1]["_end_date"] = models.TODAY
-                self.tournament.rounds[self.round_id-1]["_end_time"] = models.NOW
+                self.tournament.rounds[self.round_id-1]["_end_date"] = rn.TODAY
+                self.tournament.rounds[self.round_id-1]["_end_time"] = rn.NOW
             self.round.matches[self.match_id-1] = self.match.pair
-            models.DB.update_record_data("tournaments",self.tournament_id,"rounds",self.tournament.rounds)
+            tr.DB.update_record_data("tournaments",self.tournament_id,"rounds",self.tournament.rounds)
             print("Le résultat du match a bien été mis à jour.")
             self.tournament.check_status()
         else:
             print(f"La somme des points attribués doit être égale à 1.\n"
                   f"Les points attribuables ne peuvent être que: "
-                  f"{(models.POINTS_LIST)}")
+                  f"{(mt.POINTS_LIST)}")
 
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
 
-class EnterRankings(View):
+class EnterMatchScoresValidationView(View):
     def show_menu(self):
         pass
 
     def ask_user_choice(self):
-        if models.Players().check_if_any_player():
-            player_id = int(input(">>> ") or 0)
-            if player_id in models.Players().list_of_ids():
-                player_first_name = models.DB.get_record_data("players",player_id,"first_name")
-                player_family_name = models.DB.get_record_data("players",player_id,"family_name")
-                print(f"Entrez le nouveau classement de {player_first_name} {player_family_name}:")
-                new_ranking = input(">>> ")
-                if int(new_ranking) > 0:
-                    models.DB.update_record_data("players",player_id,"ranking",new_ranking)
-                    print(f"Le classement de {player_first_name} {player_family_name} a bien été mis à jour.")
-                else:
-                    print("Le classement doit être un chiffre strictement positif.")
-            else:
-                print("Numéro non valide.")
+        pass
+
+
+class EnterPlayerRankingView(View):
+    def show_menu(self):
+        print("Entrez le numéro d'un des joueurs ci-dessous:\n")
+        print(f"{'#':^4}{'Prénom':^20}{'Nom':^20}{'H/F':^10}{'Classement':^10}")
+        print("+" * 70)
+        for player in pl.PLAYERS_TABLE:
+            print(f"{player.doc_id:^4}{player['first_name']:^20}{player['family_name']:^20}"
+                  f"{player['_sex']:^10}{player['_ranking']:^10}")
+        print()
+
+    def ask_user_choice(self):
+        self.player_id = int(input(">>> ") or 0)
+        return self.player_id
+
+
+class EnterNewRankingView(View):
+    def __init__(self,player_full_name,old_ranking):
+        self.player_full_name = player_full_name
+        self.old_ranking = old_ranking
+
+    def show_menu(self):
+        print(f"Entrez le nouveau classement de {self.player_full_name}:")
+
+    def ask_user_choice(self):
+        self.new_ranking = input(">>> ") or 0
+        print(f"Le classement de {self.player_full_name} a été mis à jour:\n"
+              f"Ancien classement -> {self.old_ranking}\n"
+              f"Nouveau classement -> {self.new_ranking}")
         self.back_to_homepage()
-        return HomePage()
+        return self.new_ranking
 
 
 class DisplayList(View):
     def show_menu(self):
-        global LISTS_MENU
         print("Choisissez une liste à afficher parmi les suivantes:")
-        self.menu = LISTS_MENU
+        self.menu = ct.LISTS_MENU
         for key in self.menu.items():
             print(key[0], ": ", key[1])
 
     def ask_user_choice(self):
-        choice = input(">>> ")
-        if choice not in self.menu:
-            print("Choix non valide. Veuillez ressaisir un choix "
-                  "parmi la liste.")
-            return DisplayList()
-        elif choice == "1":
-            return DisplayListPlayers()
-        elif choice == "2":
-            return DisplayListPlayersByTournament()
-        elif choice == "3":
-            return DisplayListTournaments()
-        elif choice == "4":
-            return DisplayListRoundsByTournament()
-        elif choice == "5":
-            return DisplayListMatchesByTournament()
-        elif choice == "6":
-            return DisplayRankingByTournament()
-        elif choice == "8":
-            return HomePage()
-        elif choice == "9":
-            return EndPage()
+        return input(">>> ")
 
 
-class DisplayListPlayers(DisplayList):
+class DisplayListPlayers(View):
     global SORTING_MENU
     def show_menu(self):
-        if len(models.PLAYERS_TABLE) == 0:
+        if len(pl.PLAYERS_TABLE) == 0:
             print("Aucun joueur enregistré dans la base de données.")
         else:
             print("Affichez la liste des joueurs par:")
@@ -302,13 +322,13 @@ class DisplayListPlayers(DisplayList):
             print(f"{'Prénom':^20}{'Nom':^20}{'Date de Naissance':^20}{'H/F':^6}{'Classement':^10}")
             print("+" * 80)
             if ranking_sort == "1":
-                for player in sorted(models.PLAYERS_TABLE, key=lambda x:x['family_name']):
+                for player in sorted(pl.PLAYERS_TABLE, key=lambda x:x['family_name']):
                     print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                          f"{player['_birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
+                          f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
             elif ranking_sort == "2":
-                for player in sorted(models.PLAYERS_TABLE, key=lambda x:int(x['ranking'])):
+                for player in sorted(pl.PLAYERS_TABLE, key=lambda x:int(x['_ranking'])):
                     print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                          f"{player['_birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
+                          f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
             else:
                 print("Choix non valide.")
                 return
@@ -323,11 +343,11 @@ class DisplayListPlayersByTournament(View):
         pass
 
     def ask_user_choice(self):
-        if models.Tournaments().check_if_any_tournament():
+        if tr.Tournament().check_if_any_tournament():
             print("Merci de saisir un numéro de tournoi:")
             tournament_id = int(input(">>> ") or 0)
-            if tournament_id in models.Tournaments().list_of_ids:
-                tournament = models.Tournaments().instantiate_from_db(tournament_id)
+            if tournament_id in tr.Tournament().list_of_ids:
+                tournament = tr.Tournament().instantiate_from_db(tournament_id)
                 if not tournament.is_empty(display2=False):
                     print("Affichez la liste des joueurs par:")
                     for element in SORTING_MENU.items():
@@ -339,11 +359,11 @@ class DisplayListPlayersByTournament(View):
                     if ranking_sort == "1":
                         for player in sorted(tournament.players, key=lambda x: x['family_name']):
                             print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                                  f"{player['_birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
+                                  f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
                     elif ranking_sort == "2":
-                        for player in sorted(tournament.players, key=lambda x: int(x['ranking'])):
+                        for player in sorted(tournament.players, key=lambda x: int(x['_ranking'])):
                             print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                                  f"{player['_birth_date']:^20}{player['sex']:^6}{player['ranking']:^10}")
+                                  f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
             else:
                 print("Choix non valide.")
         self.back_to_homepage()
@@ -355,13 +375,13 @@ class DisplayListTournaments(View):
         pass
 
     def ask_user_choice(self):
-        if models.Tournaments().check_if_any_tournament(display2=False):
+        if tr.Tournament().check_if_any_tournament(display2=False):
             print("Voici la liste des tournois enregistrés:\n")
             print(f"{'#':^4}{'Nom':^20}"
                   f"{'Lieu':^20}{'Date de début':^14}{'Date de fin':^14}"
                   f"{'Type':^14}")
             print("+" * 86)
-            for i,tournament in enumerate(models.TOURNAMENTS_TABLE,start=1):
+            for i,tournament in enumerate(tr.TOURNAMENTS_TABLE,start=1):
                 print(f"{i:^4}{tournament['name'][:20]:^20}{tournament['place']:^20}"
                       f"{tournament['_start_date']:^14}{tournament['_end_date']:^14}"
                       f"{tournament['time_control']:^14}")
@@ -375,14 +395,14 @@ class DisplayListRoundsByTournament(View):
         pass
 
     def ask_user_choice(self):
-        if models.Tournaments().check_if_any_tournament():
+        if tr.Tournament().check_if_any_tournament():
             print("Merci de saisir un numéro de tournoi:")
             tournament_id = int(input(">>> ") or 0)
-            if tournament_id in models.Tournaments().list_of_ids:
-                tournament_rounds = models.DB.get_record_data("tournaments",
+            if tournament_id in tr.Tournament().list_of_ids:
+                tournament_rounds = tr.DB.get_record_data("tournaments",
                                                                int(tournament_id),
                                                                "rounds")
-                tournament_name = models.DB.get_record_data("tournaments",
+                tournament_name = tr.DB.get_record_data("tournaments",
                                                             int(tournament_id),
                                                             "name",)
                 if len(tournament_rounds) == 0:
@@ -402,11 +422,11 @@ class DisplayListRoundsByTournament(View):
 
 class DisplayListMatchesByTournament(View):
     def show_menu(self):
-        if models.Tournaments().check_if_any_tournament():
+        if tr.Tournament().check_if_any_tournament():
             print("Merci de saisir un numéro de tournoi:")
             tournament_id = int(input(">>> ") or 0)
-            if tournament_id in models.Tournaments().list_of_ids:
-                tournament = models.Tournaments().instantiate_from_db(tournament_id)
+            if tournament_id in tr.Tournament().list_of_ids:
+                tournament = tr.Tournament().instantiate_from_db(tournament_id)
                 if len(tournament.rounds) == 0 and not tournament.is_full():
                     print(f"Aucun round n'existe pour ce tournoi.\n"
                           f"Merci de vérifier qu'il y a bien 8 joueurs inscrits à ce tournoi.")
@@ -419,7 +439,7 @@ class DisplayListMatchesByTournament(View):
                             print(round["name"])
                             print("+"*50)
                             for j,match in enumerate(round["matches"],start=1):
-                                instantiated_match = models.Matches(match)
+                                instantiated_match = mt.Match(match)
                                 print(instantiated_match)
                             print("+" * 50)
             else:
@@ -434,11 +454,11 @@ class DisplayListMatchesByTournament(View):
 
 class DisplayRankingByTournament(View):
     def show_menu(self):
-        if models.Tournaments().check_if_any_tournament():
+        if tr.Tournament().check_if_any_tournament():
             print("Merci de saisir un numéro de tournoi:")
             tournament_id = int(input(">>> ") or 0)
-            if tournament_id in models.Tournaments().list_of_ids:
-                tournament = models.Tournaments().instantiate_from_db(tournament_id)
+            if tournament_id in tr.Tournament().list_of_ids:
+                tournament = tr.Tournament().instantiate_from_db(tournament_id)
                 if tournament.is_full():
                     if tournament.is_finished:
                         statut = "définitif"
@@ -475,9 +495,9 @@ class ExportList(View):
         #         writer.writeheader()
         #         writer.writerows(data_list)
         # Exemples:
-        # export_list("Exportplayers.csv", list(models.Players().__dict__.keys()), models.PLAYERS_TABLE.all())
-        # export_list("Exporttournaments.csv.", list(models.Tournaments().__dict__.keys()),
-        #             models.TOURNAMENTS_TABLE.all())
+        # export_list("Exportplayers.csv", list(pl.Player().__dict__.keys()), pl.PLAYERS_TABLE.all())
+        # export_list("Exporttournaments.csv.", list(tr.Tournament().__dict__.keys()),
+        #             tr.TOURNAMENTS_TABLE.all())
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -498,6 +518,7 @@ class EndPage(View):
         print(chess_symbol * (len(message) + 6))
         print()
         quit()
+
 
 if __name__ == "__main__":
     pass

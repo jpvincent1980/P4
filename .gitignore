@@ -3,6 +3,7 @@ Exercices/
 Livrables/
 flake8_rapport/
 .idea/
+*/__pycache__/*
 *.docx
 test.py
 µ.py

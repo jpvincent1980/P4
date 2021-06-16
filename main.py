@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 # coding: utf-8
-from controllers import controllers as ctrl
+from controllers import controller as ctrl
 
 if __name__ == "__main__":
 
