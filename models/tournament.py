@@ -326,6 +326,21 @@ class Tournament:
             rounds[-1]["matches"] = matches
             return matches
 
+    @classmethod
+    def tournaments_list(cls):
+        tournaments_list = []
+        for tournament in TOURNAMENTS_TABLE:
+            tournaments_list.append(tournament)
+        return tournaments_list
+
+    @classmethod
+    def players_list_by_tournament(cls,tournament_id):
+        players_list = []
+        tournament = Tournament.instantiate_from_db(tournament_id)
+        players = tournament.players
+        for player in players:
+            players_list.append(player)
+        return players_list
 
 if __name__ == "__main__":
     pass

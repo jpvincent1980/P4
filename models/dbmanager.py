@@ -2,6 +2,7 @@
 # coding: utf-8
 from tinydb import TinyDB
 
+
 class DBManager:
     """
         A class that interacts with the TinyDB database.
@@ -46,6 +47,7 @@ class DBManager:
             return getattr(self, table_name).get(doc_id=record_id)[data_key]
         else:
             return getattr(self, table_name).get(doc_id=record_id)
+
 
 if __name__ == "__main__":
     pass

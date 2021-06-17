@@ -311,27 +311,28 @@ class DisplayList(View):
 class DisplayListPlayers(View):
     global SORTING_MENU
     def show_menu(self):
-        if len(pl.PLAYERS_TABLE) == 0:
-            print("Aucun joueur enregistré dans la base de données.")
-        else:
-            print("Affichez la liste des joueurs par:")
-            for element in SORTING_MENU.items():
-                print(element[0],":",element[1])
-            ranking_sort = input(">>> ")
-            print("Voici la liste des joueurs enregistrés:\n")
-            print(f"{'Prénom':^20}{'Nom':^20}{'Date de Naissance':^20}{'H/F':^6}{'Classement':^10}")
-            print("+" * 80)
-            if ranking_sort == "1":
-                for player in sorted(pl.PLAYERS_TABLE, key=lambda x:x['family_name']):
-                    print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                          f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
-            elif ranking_sort == "2":
-                for player in sorted(pl.PLAYERS_TABLE, key=lambda x:int(x['_ranking'])):
-                    print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                          f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
-            else:
-                print("Choix non valide.")
-                return
+        print("Affichez la liste des joueurs par:")
+        for element in SORTING_MENU.items():
+            print(element[0],":",element[1])
+        return
+
+    def ask_user_choice(self):
+        ranking_sort = input(">>> ")
+        return ranking_sort
+
+
+class DisplayListPlayersResults(View):
+    def __init__(self,players_list):
+        self.players_list = players_list
+
+    def show_menu(self):
+        print(f"Voici la liste des joueurs enregistrés:\n")
+        print(f"{'#':^4}{'Prénom':^20}{'Nom':^20}{'Date de Naissance':^20}{'H/F':^6}{'Classement':^10}")
+        print("+" * 80)
+        for i,player in enumerate(self.players_list,start=1):
+            print(f"{i:^4}{player['first_name']:^20}{player['family_name']:^20}"
+                  f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
+        return
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -343,31 +344,36 @@ class DisplayListPlayersByTournament(View):
         pass
 
     def ask_user_choice(self):
-        if tr.Tournament().check_if_any_tournament():
-            print("Merci de saisir un numéro de tournoi:")
-            tournament_id = int(input(">>> ") or 0)
-            if tournament_id in tr.Tournament().list_of_ids:
-                tournament = tr.Tournament().instantiate_from_db(tournament_id)
-                if not tournament.is_empty(display2=False):
-                    print("Affichez la liste des joueurs par:")
-                    for element in SORTING_MENU.items():
-                        print(element[0], ":", element[1])
-                    ranking_sort = input(">>> ")
-                    print("Voici la liste des joueurs inscrits au tournoi:\n")
-                    print(f"{'Prénom':^20}{'Nom':^20}{'Date de Naissance':^20}{'H/F':^6}{'Classement':^10}")
-                    print("+" * 80)
-                    if ranking_sort == "1":
-                        for player in sorted(tournament.players, key=lambda x: x['family_name']):
-                            print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                                  f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
-                    elif ranking_sort == "2":
-                        for player in sorted(tournament.players, key=lambda x: int(x['_ranking'])):
-                            print(f"{player['first_name']:^20}{player['family_name']:^20}"
-                                  f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
-            else:
-                print("Choix non valide.")
+        print("Merci de saisir un numéro de tournoi:")
+        tournament_id = int(input(">>> ") or 0)
+        if tournament_id in tr.Tournament().list_of_ids:
+            tournament = tr.Tournament().instantiate_from_db(tournament_id)
+            if not tournament.is_empty(display2=False):
+                print("Affichez la liste des joueurs par:")
+                for element in SORTING_MENU.items():
+                    print(element[0], ":", element[1])
+                ranking_sort = input(">>> ")
+                print("Voici la liste des joueurs inscrits au tournoi:\n")
+                print(f"{'Prénom':^20}{'Nom':^20}{'Date de Naissance':^20}{'H/F':^6}{'Classement':^10}")
+                print("+" * 80)
+                if ranking_sort == "1":
+                    for player in sorted(tournament.players, key=lambda x: x['family_name']):
+                        print(f"{player['first_name']:^20}{player['family_name']:^20}"
+                              f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
+                elif ranking_sort == "2":
+                    for player in sorted(tournament.players, key=lambda x: int(x['_ranking'])):
+                        print(f"{player['first_name']:^20}{player['family_name']:^20}"
+                              f"{player['_birth_date']:^20}{player['_sex']:^6}{player['_ranking']:^10}")
         self.back_to_homepage()
         return HomePage()
+
+
+class DisplayListPlayersByTournamentResults(View):
+    def show_menu(self):
+        pass
+
+    def ask_user_choice(self):
+        pass
 
 
 class DisplayListTournaments(View):
@@ -375,17 +381,25 @@ class DisplayListTournaments(View):
         pass
 
     def ask_user_choice(self):
-        if tr.Tournament().check_if_any_tournament(display2=False):
-            print("Voici la liste des tournois enregistrés:\n")
-            print(f"{'#':^4}{'Nom':^20}"
-                  f"{'Lieu':^20}{'Date de début':^14}{'Date de fin':^14}"
-                  f"{'Type':^14}")
-            print("+" * 86)
-            for i,tournament in enumerate(tr.TOURNAMENTS_TABLE,start=1):
-                print(f"{i:^4}{tournament['name'][:20]:^20}{tournament['place']:^20}"
-                      f"{tournament['_start_date']:^14}{tournament['_end_date']:^14}"
-                      f"{tournament['time_control']:^14}")
+        pass
 
+
+class DisplayListTournamentsResults(View):
+    def __init__(self,tournaments_list):
+        self.tournaments_list = tournaments_list
+
+    def show_menu(self):
+        print("Voici la liste des tournois enregistrés:\n")
+        print(f"{'#':^4}{'Nom':^20}"
+              f"{'Lieu':^20}{'Date de début':^14}{'Date de fin':^14}"
+              f"{'Type':^14}")
+        print("+" * 86)
+        for i, tournament in enumerate(self.tournaments_list, start=1):
+            print(f"{i:^4}{tournament['name'][:20]:^20}{tournament['place']:^20}"
+                  f"{tournament['_start_date']:^14}{tournament['_end_date']:^14}"
+                  f"{tournament['time_control']:^14}")
+
+    def ask_user_choice(self):
         self.back_to_homepage()
         return HomePage()
 
@@ -395,85 +409,74 @@ class DisplayListRoundsByTournament(View):
         pass
 
     def ask_user_choice(self):
-        if tr.Tournament().check_if_any_tournament():
-            print("Merci de saisir un numéro de tournoi:")
-            tournament_id = int(input(">>> ") or 0)
-            if tournament_id in tr.Tournament().list_of_ids:
-                tournament_rounds = tr.DB.get_record_data("tournaments",
-                                                               int(tournament_id),
-                                                               "rounds")
-                tournament_name = tr.DB.get_record_data("tournaments",
-                                                            int(tournament_id),
-                                                            "name",)
-                if len(tournament_rounds) == 0:
-                    print("Aucun round pour le ", tournament_name,".",sep="")
-                else:
-                    print("Voici la liste des rounds du tournoi:\n")
-                    print(f"{'Nom':^20}{'Date de début':^20}{'Heure de début':^20}{'Date de fin':^20}{'Heure de fin':^20}")
-                    print("+" * 100)
-                    for round in tournament_rounds:
-                        print(f"{round['name'][:20]:^20}{round['_start_date']:^20}{round['_start_time']:^20}"
-                              f"{round['_end_date']:^20}{round['_end_time']:^20}")
+        print("Merci de saisir un numéro de tournoi:")
+        tournament_id = int(input(">>> ") or 0)
+        if tournament_id in tr.Tournament().list_of_ids:
+            tournament_rounds = tr.DB.get_record_data("tournaments",
+                                                           int(tournament_id),
+                                                           "rounds")
+            tournament_name = tr.DB.get_record_data("tournaments",
+                                                        int(tournament_id),
+                                                        "name",)
+            if len(tournament_rounds) == 0:
+                print("Aucun round pour le ", tournament_name,".",sep="")
             else:
-                print("Numéro non valide.")
+                print("Voici la liste des rounds du tournoi:\n")
+                print(f"{'Nom':^20}{'Date de début':^20}{'Heure de début':^20}{'Date de fin':^20}{'Heure de fin':^20}")
+                print("+" * 100)
+                for round in tournament_rounds:
+                    print(f"{round['name'][:20]:^20}{round['_start_date']:^20}{round['_start_time']:^20}"
+                          f"{round['_end_date']:^20}{round['_end_time']:^20}")
         self.back_to_homepage()
         return HomePage()
 
 
 class DisplayListMatchesByTournament(View):
     def show_menu(self):
-        if tr.Tournament().check_if_any_tournament():
-            print("Merci de saisir un numéro de tournoi:")
-            tournament_id = int(input(">>> ") or 0)
-            if tournament_id in tr.Tournament().list_of_ids:
-                tournament = tr.Tournament().instantiate_from_db(tournament_id)
-                if len(tournament.rounds) == 0 and not tournament.is_full():
-                    print(f"Aucun round n'existe pour ce tournoi.\n"
-                          f"Merci de vérifier qu'il y a bien 8 joueurs inscrits à ce tournoi.")
-                else:
-                    if tournament.nb_of_rounds == 0:
-                        print("Aucun round n'existe pour ce tournoi.\n"
-                              "Merci de vous assurer qu'il y a bien 8 joueurs inscrits.")
-                    else:
-                        for i,round in enumerate(tournament.rounds,start=1):
-                            print(round["name"])
-                            print("+"*50)
-                            for j,match in enumerate(round["matches"],start=1):
-                                instantiated_match = mt.Match(match)
-                                print(instantiated_match)
-                            print("+" * 50)
+        print("Merci de saisir un numéro de tournoi:")
+        tournament_id = int(input(">>> ") or 0)
+        if tournament_id in tr.Tournament().list_of_ids:
+            tournament = tr.Tournament().instantiate_from_db(tournament_id)
+            if len(tournament.rounds) == 0 and not tournament.is_full():
+                print(f"Aucun round n'existe pour ce tournoi.\n"
+                      f"Merci de vérifier qu'il y a bien 8 joueurs inscrits à ce tournoi.")
             else:
-                print("Numéro non valide.")
-        else:
-            pass
+                if tournament.nb_of_rounds == 0:
+                    print("Aucun round n'existe pour ce tournoi.\n"
+                          "Merci de vous assurer qu'il y a bien 8 joueurs inscrits.")
+                else:
+                    for i,round in enumerate(tournament.rounds,start=1):
+                        print(round["name"])
+                        print("+"*50)
+                        for j,match in enumerate(round["matches"],start=1):
+                            instantiated_match = mt.Match(match)
+                            print(instantiated_match)
+                        print("+" * 50)
 
     def ask_user_choice(self):
         self.back_to_homepage()
         return HomePage()
 
 
-class DisplayRankingByTournament(View):
+class DisplayListRankingsByTournament(View):
     def show_menu(self):
-        if tr.Tournament().check_if_any_tournament():
-            print("Merci de saisir un numéro de tournoi:")
-            tournament_id = int(input(">>> ") or 0)
-            if tournament_id in tr.Tournament().list_of_ids:
-                tournament = tr.Tournament().instantiate_from_db(tournament_id)
-                if tournament.is_full():
-                    if tournament.is_finished:
-                        statut = "définitif"
-                    else:
-                        statut = "provisoire"
-                    print(f"Le classement {statut} du tournoi est le suivant:\n")
-                    print(f"{'Position':^10}{'Joueur':^20}{'Points':^20}")
-                    print("+"*50)
-                    for i,player in enumerate(tournament.tournament_ranking,start=1):
-                        player_name = player["first_name"] + " " + player["family_name"]
-                        print(f"{i:^10}{player_name:^20}{player['score']:^20}")
+        print("Merci de saisir un numéro de tournoi:")
+        tournament_id = int(input(">>> ") or 0)
+        if tournament_id in tr.Tournament().list_of_ids:
+            tournament = tr.Tournament().instantiate_from_db(tournament_id)
+            if tournament.is_full():
+                if tournament.is_finished:
+                    statut = "définitif"
                 else:
-                    print(f"Le tournoi n'a pas démarré, merci d'inscrire 8 joueurs au tournoi.")
+                    statut = "provisoire"
+                print(f"Le classement {statut} du tournoi est le suivant:\n")
+                print(f"{'Position':^10}{'Joueur':^20}{'Points':^20}")
+                print("+"*50)
+                for i,player in enumerate(tournament.tournament_ranking,start=1):
+                    player_name = player["first_name"] + " " + player["family_name"]
+                    print(f"{i:^10}{player_name:^20}{player['score']:^20}")
             else:
-                print("Choix non valide.")
+                print(f"Le tournoi n'a pas démarré, merci d'inscrire 8 joueurs au tournoi.")
 
     def ask_user_choice(self):
         self.back_to_homepage()

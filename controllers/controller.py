@@ -36,7 +36,7 @@ LISTS_MENU_COMMAND = {"1": views.DisplayListPlayers(),
               "3": views.DisplayListTournaments(),
               "4": views.DisplayListRoundsByTournament(),
               "5": views.DisplayListMatchesByTournament(),
-              "6": views.DisplayRankingByTournament(),
+              "6": views.DisplayListRankingsByTournament(),
               "8": views.HomePage(),
               "9": views.EndPage()}
 
@@ -49,7 +49,7 @@ VIEWS_REQUIRING_TOURNAMENT = (views.AddPlayerToTournamentView,
                               views.DisplayListTournaments,
                               views.DisplayListRoundsByTournament,
                               views.DisplayListMatchesByTournament,
-                              views.DisplayRankingByTournament)
+                              views.DisplayListRankingsByTournament)
 
 VIEWS_REQUIRING_PLAYER = (views.AddPlayerToTournamentView,
                           views.EnterPlayerRankingView,
@@ -164,7 +164,7 @@ class Controller:
             self.view.show_menu()
             user_choice = self.view.ask_user_choice()
             if isinstance(self.view,views.HomePage):
-                choice_result = self.menu_controller(user_choice)
+                next_view = self.menu_controller(user_choice)
             elif isinstance(self.view,views.CreateTournamentView):
                 new_tournament = tr.Tournament(name=self.view.name,
                                                place=self.view.place,
@@ -175,7 +175,7 @@ class Controller:
                                                add_to_db=True)
                 new_tournament_name = new_tournament.name
                 tr.Tournament.update_ids()
-                choice_result = views.TournamentCreationValidationView(new_tournament_name)
+                next_view = views.TournamentCreationValidationView(new_tournament_name)
             elif isinstance(self.view,views.CreatePlayerView):
                 new_player = pl.Player(first_name=self.view.first_name,
                                        family_name=self.view.family_name,
@@ -185,64 +185,67 @@ class Controller:
                                        add_to_db=True)
                 new_player_name = new_player.first_name + " " + new_player.family_name
                 pl.Player.update_ids()
-                choice_result = views.PlayerCreationValidationView(new_player_name)
+                next_view = views.PlayerCreationValidationView(new_player_name)
             elif isinstance(self.view, views.AddPlayerToTournamentView):
                 if not self.tournament_exists(user_choice):
-                    choice_result = views.UnknownTournament()
+                    next_view = views.UnknownTournament()
                 else:
-                    self.tournament_id = user_choice
-                    self.tournament = tr.Tournament.instantiate_from_db(int(user_choice))
-                    self.available_players_ids = self.tournament.available_players_ids
-                    choice_result = views.DisplayAvailablePlayers(self.available_players_ids)
+                    tournament_id = user_choice
+                    tournament = tr.Tournament.instantiate_from_db(int(tournament_id))
+                    available_players_ids = tournament.available_players_ids
+                    next_view = views.DisplayAvailablePlayers(available_players_ids)
             elif isinstance(self.view, views.DisplayAvailablePlayers):
-                self.player_id = user_choice
-                new_player = pl.Player.instantiate_from_db(self.player_id)
+                player_id = user_choice
+                new_player = pl.Player.instantiate_from_db(player_id)
                 new_player_full_name = new_player.first_name + " " + new_player.family_name
                 new_player = new_player.__dict__
-                tr.DB.update_record_data("tournaments",self.tournament_id,"players",new_player,True)
-                self.tournament = tr.Tournament.instantiate_from_db(self.tournament_id)
-                self.check_tournament_status(self.tournament)
-                tournament_name = self.tournament.name
-                choice_result = views.AddPlayerValidationView(new_player_full_name,tournament_name)
+                tr.DB.update_record_data("tournaments",tournament_id,"players",new_player,True)
+                tournament = tr.Tournament.instantiate_from_db(tournament_id)
+                self.check_tournament_status(tournament)
+                tournament_name = tournament.name
+                next_view = views.AddPlayerValidationView(new_player_full_name,tournament_name)
             elif isinstance(self.view, views.EnterMatchScoreView):
                 if not self.tournament_exists(user_choice):
-                    choice_result = views.UnknownTournament()
+                    next_view = views.UnknownTournament()
                 else:
-                    self.tournament_id = user_choice
-                    self.tournament = tr.Tournament.instantiate_from_db(int(user_choice))
-                    choice_result = views.DisplayAvailableRounds(self.tournament)
+                    tournament_id = user_choice
+                    tournament = tr.Tournament.instantiate_from_db(int(tournament_id))
+                    next_view = views.DisplayAvailableRounds(tournament)
             elif isinstance(self.view, views.DisplayAvailableRounds):
-                self.round_id = user_choice
-                choice_result = views.DisplayAvailableMatches(self.tournament,
-                                                              self.round_id)
+                round_id = user_choice
+                next_view = views.DisplayAvailableMatches(tournament, round_id)
             elif isinstance(self.view, views.DisplayAvailableMatches):
-                self.match_id = user_choice
-                choice_result = views.EnterMatchScoresView(self.tournament,
-                                                           self.round_id,
-                                                           self.match_id)
+                match_id = user_choice
+                next_view = views.EnterMatchScoresView(tournament, round_id, match_id)
             elif isinstance(self.view, views.EnterMatchScoresView):
-                choice_result = views.HomePage()
+                next_view = views.HomePage()
             elif isinstance(self.view, views.EnterPlayerRankingView):
                 if not self.player_exists(user_choice):
-                    choice_result = views.UnknownPlayer()
+                    next_view = views.UnknownPlayer()
                 else:
-                    self.player_id = user_choice
+                    player_id = user_choice
                     for player in pl.PLAYERS_TABLE:
-                        if player["_id"] == self.player_id:
-                            self.player_full_name = player["first_name"] + \
+                        if player["_id"] == player_id:
+                            player_full_name = player["first_name"] + \
                                                     " " + \
                                                     player["family_name"]
-                            self.old_ranking = player["_ranking"]
-                    choice_result = views.EnterNewRankingView(self.player_full_name,
-                                                              self.old_ranking)
+                            old_ranking = player["_ranking"]
+                    next_view = views.EnterNewRankingView(player_full_name, old_ranking)
             elif isinstance(self.view, views.EnterNewRankingView):
-                pl.DB.update_record_data("players",self.player_id,"_ranking",self.view.new_ranking)
-                choice_result = views.HomePage()
+                pl.DB.update_record_data("players",player_id,"_ranking",self.view.new_ranking)
+                next_view = views.HomePage()
             elif isinstance(self.view,views.DisplayList):
-                choice_result = self.menu_controller(user_choice)
+                next_view = self.menu_controller(user_choice)
+            elif isinstance(self.view,views.DisplayListPlayers):
+                sorting_choice = user_choice
+                players_list = pl.Player.players_list(sorting_choice)
+                next_view = views.DisplayListPlayersResults(players_list)
+            elif isinstance(self.view,views.DisplayListTournaments):
+                tournaments_list = tr.Tournament.tournaments_list()
+                next_view = views.DisplayListTournamentsResults(tournaments_list)
             else:
-                choice_result = views.HomePage()
-            self.view = choice_result
+                next_view = views.HomePage()
+            self.view = next_view
 
 if __name__ == "__main__":
     pass

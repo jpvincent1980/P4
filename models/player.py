@@ -124,6 +124,18 @@ class Player:
     def __str__(self):
         return f"{self.first_name} {self.family_name}"
 
+    @classmethod
+    def players_list(cls,sorting_choice):
+        players_list = []
+        sorting_choice = int(sorting_choice)
+        if sorting_choice == 1:
+            for player in sorted(PLAYERS_TABLE, key=lambda x: x['family_name']):
+                players_list.append(player)
+        elif sorting_choice == 2:
+            for player in sorted(PLAYERS_TABLE, key=lambda x: int(x['_ranking'])):
+                players_list.append(player)
+        return players_list
+
 
 if __name__ == "__main__":
     pass
