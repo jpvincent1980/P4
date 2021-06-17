@@ -161,8 +161,8 @@ class Tournament:
         list_of_pairs = []
         for round in self.rounds:
             for match in round["matches"]:
-                list_of_pairs.append((match[0][0]["id"],match[1][0]["id"]))
-                list_of_pairs.append((match[1][0]["id"], match[0][0]["id"]))
+                list_of_pairs.append((match[0][0]["_id"],match[1][0]["_id"]))
+                list_of_pairs.append((match[1][0]["_id"], match[0][0]["_id"]))
         return list(set(list_of_pairs))
 
     def check_available_players(self):
@@ -243,7 +243,7 @@ class Tournament:
         for round in self.rounds:
             for match in round["matches"]:
                 for score in match:
-                    tournament_scores[score[0]["id"]] += score[1]
+                    tournament_scores[score[0]["_id"]] += score[1]
         return tournament_scores
 
 
@@ -267,7 +267,7 @@ class Tournament:
         players = self.players
         new_ranking = []
         for player in players:
-            new_ranking.append({"player":player,"ranking":player["_ranking"],"points":tournament_scores[player["_id"]]})
+            new_ranking.append({"player":player,"_ranking":player["_ranking"],"points":tournament_scores[player["_id"]]})
         new_ranking = sorted(new_ranking,key=lambda x: (x["points"],-int(x["_ranking"])),reverse=True)
         new_ranking = [element["player"] for element in new_ranking]
         for player in new_ranking:

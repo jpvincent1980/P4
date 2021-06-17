@@ -3,6 +3,8 @@
 from views import views
 from models import player as pl
 from models import tournament as tr
+from models import round as rn
+from models import match as mt
 
 MAIN_MENU = {"1": "Créer un nouveau tournoi",
              "2": "Créer un nouveau joueur",
@@ -120,7 +122,7 @@ class Controller:
                                          tournament._id,
                                          "rounds",
                                          tournament.rounds)
-                print("Un nouveau round vient d'être généré pour ce tournoi.")
+                return "NewRoundGenerated"
         elif tournament.tournament_nb_of_rounds == tournament.nb_of_rounds:
             if len(tournament.tournament_unfinished_rounds_ids) == 0:
                 tournament._end_date = tr.TODAY
@@ -128,6 +130,7 @@ class Controller:
                                          tournament._id,
                                          "_end_date",
                                          tournament._end_date)
+                return "TournamentIsOver"
 
     def check_players(self):
         if self.tournament.tournament_nb_of_players == 0:
@@ -201,9 +204,12 @@ class Controller:
                 new_player = new_player.__dict__
                 tr.DB.update_record_data("tournaments",tournament_id,"players",new_player,True)
                 tournament = tr.Tournament.instantiate_from_db(tournament_id)
-                self.check_tournament_status(tournament)
+                completed = False
+                status = self.check_tournament_status(tournament)
+                if status == "NewRoundGenerated":
+                    completed = True
                 tournament_name = tournament.name
-                next_view = views.AddPlayerValidationView(new_player_full_name,tournament_name)
+                next_view = views.AddPlayerValidationView(new_player_full_name,tournament_name,completed)
             elif isinstance(self.view, views.EnterMatchScoreView):
                 if not self.tournament_exists(user_choice):
                     next_view = views.UnknownTournament()
@@ -213,12 +219,40 @@ class Controller:
                     next_view = views.DisplayAvailableRounds(tournament)
             elif isinstance(self.view, views.DisplayAvailableRounds):
                 round_id = user_choice
+                #TODO Vérifier que le round saisi existe
                 next_view = views.DisplayAvailableMatches(tournament, round_id)
             elif isinstance(self.view, views.DisplayAvailableMatches):
                 match_id = user_choice
-                next_view = views.EnterMatchScoresView(tournament, round_id, match_id)
+                #TODO Vérifier que le match saisi existe
+                match = mt.Match(tournament.rounds[round_id-1]["matches"][match_id-1])
+                player1_full_name = match._player1["first_name"] + " " + match._player1["family_name"]
+                player2_full_name = match._player2["first_name"] + " " + match._player2["family_name"]
+                next_view = views.EnterMatchScoresView(match,
+                                                       player1_full_name,
+                                                       player2_full_name)
             elif isinstance(self.view, views.EnterMatchScoresView):
-                next_view = views.HomePage()
+                score_player1 = float(user_choice[0])
+                score_player2 = float(user_choice[1])
+                round_completed = False
+                if (score_player1 and score_player2) in mt.POINTS_LIST and \
+                        score_player1 + score_player2 == 1:
+                    match.match_score(score_player1, score_player2)
+                    if match_id == 4:
+                        tournament.rounds[round_id - 1]["_end_date"] = tr.TODAY
+                        tournament.rounds[round_id - 1]["_end_time"] = tr.NOW
+                        round_completed = True
+                    tournament.rounds[round_id-1]["matches"][match_id - 1] = match.pair
+                    tr.DB.update_record_data("tournaments",
+                                             tournament_id,
+                                             "rounds",
+                                             tournament.rounds)
+                    updated_tournament = tr.Tournament.instantiate_from_db(tournament_id)
+                    tournament_completed = updated_tournament.is_finished
+                    self.check_tournament_status(updated_tournament)
+                    next_view = views.EnterMatchScoresValidationView(round_completed,
+                                                                     tournament_completed)
+                else:
+                    next_view = views.UncorrectScoresView()
             elif isinstance(self.view, views.EnterPlayerRankingView):
                 if not self.player_exists(user_choice):
                     next_view = views.UnknownPlayer()
@@ -240,9 +274,74 @@ class Controller:
                 sorting_choice = user_choice
                 players_list = pl.Player.players_list(sorting_choice)
                 next_view = views.DisplayListPlayersResults(players_list)
+            elif isinstance(self.view,views.DisplayListPlayersByTournament):
+                tournament_id = user_choice
+                if not self.tournament_exists(tournament_id):
+                    next_view = views.UnknownTournament()
+                else:
+                    tournament = tr.Tournament.instantiate_from_db(tournament_id)
+                    if len(tournament.players) < 1:
+                        next_view = views.NoPlayersEnlistedView()
+                    else:
+                        views.DisplayListPlayers().show_menu()
+                        sorting_choice = views.DisplayListPlayers().ask_user_choice()
+                        players_list = []
+                        if sorting_choice == "1":
+                            for player in sorted(tournament.players, key=lambda x: x['family_name']):
+                                players_list.append(player)
+                        elif sorting_choice == "2":
+                            for player in sorted(tournament.players, key=lambda x: int(x['_ranking'])):
+                                players_list.append(player)
+                        next_view = views.DisplayListPlayersByTournamentResults(players_list)
             elif isinstance(self.view,views.DisplayListTournaments):
                 tournaments_list = tr.Tournament.tournaments_list()
                 next_view = views.DisplayListTournamentsResults(tournaments_list)
+            elif isinstance(self.view, views.DisplayListRoundsByTournament):
+                tournament_id = user_choice
+                if not self.tournament_exists(tournament_id):
+                    next_view = views.UnknownTournament()
+                else:
+                    tournament = tr.Tournament.instantiate_from_db(tournament_id)
+                    tournament_name = tournament.name
+                    rounds_list = tournament.rounds
+                    if len(rounds_list) == 0:
+                        next_view = views.NoRound()
+                    else:
+                        next_view = views.DisplayListRoundsByTournamentResults(rounds_list,
+                                                                               tournament_name)
+            elif isinstance(self.view, views.DisplayListMatchesByTournament):
+                tournament_id = user_choice
+                if not self.tournament_exists(tournament_id):
+                    next_view = views.UnknownTournament()
+                else:
+                    tournament = tr.Tournament.instantiate_from_db(tournament_id)
+                    tournament_name = tournament.name
+                    rounds_list = tournament.rounds
+                    if len(rounds_list) == 0:
+                        next_view = views.NoRound()
+                    else:
+                        matches_list = []
+                        for i, round in enumerate(rounds_list, start=1):
+                            for j,match in enumerate(round["matches"],start=1):
+                                instantiated_match = mt.Match(match)
+                                matches_list.append((round["name"],instantiated_match))
+                            next_view = views.DisplayListMatchesByTournamentResults(matches_list,
+                                                                                    tournament_name)
+            elif isinstance(self.view, views.DisplayListRankingsByTournament):
+                tournament_id = user_choice
+                if not self.tournament_exists(tournament_id):
+                    next_view = views.UnknownTournament()
+                else:
+                    tournament = tr.Tournament.instantiate_from_db(tournament_id)
+                    rankings_list = tournament.tournament_ranking
+                    status = "provisoire"
+                    if tournament.is_finished and tournament.is_full():
+                        status = "définitif"
+                    if len(tournament.players) == 0:
+                        next_view = views.NoPlayersEnlistedView()
+                    else:
+                        next_view = views.DisplayListRankingsByTournamentResults(rankings_list,
+                                                                                 status)
             else:
                 next_view = views.HomePage()
             self.view = next_view
