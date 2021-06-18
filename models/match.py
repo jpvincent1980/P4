@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 # coding: utf-8
+from models import player as pl
+
 POINTS = {"Match perdu":0,
           "Match nul":0.5,
           "Match gagné":1}
@@ -20,26 +22,43 @@ class Match:
 
             Methods
             -------
-            match_played -> returns True if the match is over (i.e.
+            match_completed -> returns True if the match is over (i.e.
             sum of points of both players is greater than 0) or False if not
             match_score -> updates the score of the match
             """
-    def __init__(self,match):
-        self._player1 = match[0][0]
-        self._player2 = match[1][0]
-        self._score_player1 = match[0][1]
-        self._score_player2 = match[1][1]
+    def __init__(self,player1,player2,score_player1=0,score_player2=0):
+        self._player1 = player1
+        self._player2 = player2
+        self._score_player1 = score_player1
+        self._score_player2 = score_player2
 
     def __str__(self):
-        return f"{self._player1['first_name']} {self._player1['family_name']} vs " \
-               f"{self._player2['first_name']} {self._player2['family_name']} \n " \
+        return f"{self._player1.first_name} {self._player1.family_name} vs " \
+               f"{self._player2.first_name} {self._player2.family_name} \n " \
                f"Score -> {self._score_player1} - {self._score_player2}"
+
+    @classmethod
+    def instantiate_from_serialized_match(cls, serialized_match):
+        new_match = cls(player1=serialized_match["_player1"],
+                        player2=serialized_match["_player2"],
+                        score_player1=serialized_match["_score_player1"],
+                        score_player2=serialized_match["_score_player2"])
+        return new_match
+
+    def serialize_match(self):
+        serialized_match = {"_player1":self._player1,
+                            "_player2":self._player2,
+                            "_score_player1":self._score_player1,
+                            "_score_player2":self._score_player2}
+        return serialized_match
+
 
     @property
     def pair(self):
-        return [[self._player1,self._score_player1],[self._player2,self._score_player2]]
+        return [[pl.Player.serialize_player(self._player1),self._score_player1],
+                [pl.Player.serialize_player(self._player2),self._score_player2]]
 
-    def match_played(self):
+    def match_completed(self):
         """
         Checks if a match has already been played or not
         Returns a boolean (True/False)

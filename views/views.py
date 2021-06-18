@@ -54,7 +54,16 @@ class HomePage(View):
 
 class NoTournament(View):
     def show_menu(self):
-        print("Aucun tournoi n'est créé dans la base de données.")
+        print(f"Aucun tournoi n'est créé dans la base de données.")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class NoOpenTournament(View):
+    def show_menu(self):
+        print(f"Aucun tournoi n'est actuellement en cours.")
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -63,16 +72,7 @@ class NoTournament(View):
 
 class UnknownTournament(View):
     def show_menu(self):
-        print("Numéro de tournoi non valide.")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class NoPlayer(View):
-    def show_menu(self):
-        print("Aucun joueur n'est créé dans la base de données.")
+        print(f"Numéro de tournoi non valide.\n")
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -81,7 +81,34 @@ class NoPlayer(View):
 
 class UnknownPlayer(View):
     def show_menu(self):
-        print("Numéro de joueur non valide.")
+        print(f"Numéro de joueur non valide.\n")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class UnknownRound(View):
+    def show_menu(self):
+        print(f"Numéro de round non valide.\n")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class UnknownMatch(View):
+    def show_menu(self):
+        print(f"Numéro de match non valide.\n")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class NoPlayer(View):
+    def show_menu(self):
+        print(f"Aucun joueur n'est créé dans la base de données.\n")
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -90,18 +117,27 @@ class UnknownPlayer(View):
 
 class NoPlayersEnlistedView(View):
     def show_menu(self):
-        print("Aucun joueur n'est inscrit à ce tournoi.")
+        print(f"Aucun joueur n'est inscrit à ce tournoi.\n")
 
     def ask_user_choice(self):
         self.back_to_homepage()
         return HomePage()
 
 
-class UncorrectScoresView(View):
+class PlayerAlreadyEnlisted(View):
+    def show_menu(self):
+        print(f"Ce joueur est déjà inscrit à ce tournoi.\n")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class IncorrectScoresView(View):
     def show_menu(self):
         print(f"La somme des points attribués doit être égale à 1.\n"
               f"Les points attribuables ne peuvent être que: "
-              f"{mt.POINTS_LIST}")
+              f"{mt.POINTS_LIST}\n")
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -110,7 +146,8 @@ class UncorrectScoresView(View):
 
 class InvalidChoiceView(View):
     def show_menu(self):
-        print("Choix non valide.")
+        print(f"Choix non valide.\n"
+              f"Veuillez ressaisir un choix parmi la liste.\n")
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -124,6 +161,16 @@ class NoRound(View):
 
     def ask_user_choice(self):
         self.back_to_homepage()
+        return HomePage()
+
+
+class CompletedRound(View):
+    def show_menu(self):
+        print(f"Ce round est terminé.\n")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
 
 
 class NoMatch(View):
@@ -133,6 +180,25 @@ class NoMatch(View):
 
     def ask_user_choice(self):
         self.back_to_homepage()
+        return HomePage()
+
+
+class CompletedMatch(View):
+    def show_menu(self):
+        print(f"Ce match est terminé.\n")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
+
+
+class InactiveTournament(View):
+    def show_menu(self):
+        print(f"Ce tournoi n'a pas démarré ou est terminé.\n")
+
+    def ask_user_choice(self):
+        self.back_to_homepage()
+        return HomePage()
 
 
 class CreateTournamentView(View):
@@ -147,7 +213,7 @@ class CreateTournamentView(View):
                              f">>> ")
         self.description = input("Entrez une description du tournoi "
                              "-> ")
-        return
+        return "0"
 
 
 class TournamentCreationValidationView(View):
@@ -175,7 +241,7 @@ class CreatePlayerView(View):
                            "(JJ/MM/AAAA) -> ")
         self.sex = input("Entrez le sexe du joueur (H/F) -> ")
         self.ranking = input("Entrez le classement du joueur -> ")
-        return
+        return "0"
 
 
 class PlayerCreationValidationView(View):
@@ -197,8 +263,8 @@ class AddPlayerToTournamentView(View):
             print(f"{id} -> {name}")
 
     def ask_user_choice(self):
-        self.tournament_id = int(input(">>> ") or 0)
-        return self.tournament_id
+        tournament_id = input(">>> ")
+        return tournament_id
 
 
 class DisplayAvailablePlayers(View):
@@ -212,8 +278,8 @@ class DisplayAvailablePlayers(View):
                   f"{pl.DB.get_record_data('players',id)['family_name']}")
 
     def ask_user_choice(self):
-        self.player_id = int(input(">>> ") or 0)
-        return self.player_id
+        player_id = input(">>> ")
+        return player_id
 
 
 class AddPlayerValidationView(View):
@@ -233,62 +299,63 @@ class AddPlayerValidationView(View):
 
 
 class EnterMatchScoreView(View):
+    def __init__(self,tournaments_list=[]):
+        self.tournaments_list = tournaments_list
+
     def show_menu(self):
         print(f"Choisissez un tournoi parmi les suivants:")
-        for tournament in tr.Tournament.full_tournaments():
+        for tournament in self.tournaments_list:
             print(f"{tournament['_id']} -> {tournament['name']}")
 
     def ask_user_choice(self):
-        tournament_id = int(input(">>> ") or 0)
+        tournament_id = input(">>> ")
         return tournament_id
 
 
 class DisplayAvailableRounds(View):
-    def __init__(self,tournament):
-        self.tournament = tournament
+    def __init__(self,rounds_list=[]):
+        self.rounds_list = rounds_list
 
     def show_menu(self):
         print(f"Choisissez un round parmi les suivants:")
-        for round in self.tournament.rounds:
+        for round in self.rounds_list:
             print(f"{round['name'][-1]} -> {round['name']}")
 
     def ask_user_choice(self):
-        round_id = int(input(">>> ") or 0)
+        round_id = input(">>> ")
         return round_id
 
 class DisplayAvailableMatches(View):
-    def __init__(self, tournament, round_id):
-        self.tournament = tournament
-        self.round_id = round_id - 1
+    def __init__(self, matches_list=[]):
+        self.matches_list = matches_list
 
     def show_menu(self):
         print(f"Choisissez un match parmi les suivants:")
-        for i,match in enumerate(self.tournament.rounds[self.round_id]["matches"],start=1):
-            match = mt.Match(match)
+        for i,match in self.matches_list:
             print(f"{i} -> {match}")
 
     def ask_user_choice(self):
-        match_id = int(input(">>> ") or 0)
+        match_id = input(">>> ")
         return match_id
 
 class EnterMatchScoresView(View):
-    def __init__(self, match, player1_full_name, player2_full_name):
+    def __init__(self, match, player1, player2):
         self.match = match
-        self.player1_full_name = player1_full_name
-        self.player2_full_name = player2_full_name
+        self.player1 = player1
+        self.player2 = player2
 
     def show_menu(self):
-        print(f"Entrez les scores du match {self.player1_full_name} vs "
-              f"{self.player2_full_name}:")
+        print(f"Entrez les scores du match {self.player1} vs "
+              f"{self.player2}:")
 
     def ask_user_choice(self):
-        score_player1 = input(f">>> Score de {self.player1_full_name}:\n")
-        score_player2 = input(f">>> Score de {self.player2_full_name}:\n")
+        score_player1 = input(f">>> Score de {self.player1}:\n")
+        score_player2 = input(f">>> Score de {self.player2}:\n")
         return score_player1, score_player2
 
 
 class EnterMatchScoresValidationView(View):
-    def __init__(self, round_completed, tournament_completed):
+    def __init__(self, round_completed=False, tournament_completed=False):
         self.round_completed = round_completed
         self.tournament_completed = tournament_completed
 
@@ -317,8 +384,8 @@ class EnterPlayerRankingView(View):
         print()
 
     def ask_user_choice(self):
-        self.player_id = int(input(">>> ") or 0)
-        return self.player_id
+        player_id = input(">>> ")
+        return player_id
 
 
 class EnterNewRankingView(View):
@@ -340,7 +407,7 @@ class EnterNewRankingView(View):
 
 class DisplayList(View):
     def show_menu(self):
-        print("Choisissez une liste à afficher parmi les suivantes:")
+        print("Choisissez une liste parmi les suivantes:")
         self.menu = ct.LISTS_MENU
         for key in self.menu.items():
             print(key[0], ": ", key[1])
@@ -387,7 +454,7 @@ class DisplayListPlayersByTournament(View):
             print(f"{id} -> {tournament['name']}")
 
     def ask_user_choice(self):
-        tournament_id = int(input(">>> ") or 0)
+        tournament_id = input(">>> ")
         return tournament_id
 
 
@@ -414,7 +481,7 @@ class DisplayListTournaments(View):
         pass
 
     def ask_user_choice(self):
-        pass
+        return "0"
 
 
 class DisplayListTournamentsResults(View):
@@ -444,7 +511,7 @@ class DisplayListRoundsByTournament(View):
             print(f"{id} -> {tournament['name']}")
 
     def ask_user_choice(self):
-        tournament_id = int(input(">>> ") or 0)
+        tournament_id = input(">>> ")
         return tournament_id
 
 class DisplayListRoundsByTournamentResults(View):
@@ -473,7 +540,7 @@ class DisplayListMatchesByTournament(View):
             print(f"{id} -> {tournament['name']}")
 
     def ask_user_choice(self):
-        tournament_id = int(input(">>> ") or 0)
+        tournament_id = input(">>> ")
         return tournament_id
 
 
@@ -499,17 +566,18 @@ class DisplayListRankingsByTournament(View):
             print(f"{id} -> {tournament['name']}")
 
     def ask_user_choice(self):
-        tournament_id = int(input(">>> ") or 0)
+        tournament_id = input(">>> ")
         return tournament_id
 
 
 class DisplayListRankingsByTournamentResults(View):
-    def __init__(self,rankings_list,status):
+    def __init__(self,rankings_list,tournament_name,status):
         self.rankings_list = rankings_list
+        self.tournament_name = tournament_name
         self.status = status
 
     def show_menu(self):
-        print(f"Le classement {self.status} du tournoi est le suivant:\n")
+        print(f"Le classement {self.status} du {self.tournament_name} est le suivant:\n")
         print(f"{'Position':^10}{'Prénom':^20}{'Nom':^20}{'Points':^20}")
         print("+" * 70)
         for i, player in enumerate(self.rankings_list, start=1):

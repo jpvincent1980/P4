@@ -43,7 +43,7 @@ class Tournament:
             """
     global TIME_CONTROL, DB, TOURNAMENTS_TABLE
     def __init__(self, name="", place="", start_date=TODAY, end_date=TODAY,
-                 rounds=[], players=[],
+                 nb_of_rounds=4, rounds=[], players=[],
                  time_control=TIME_CONTROL["1"], description="",
                  id="",
                  add_to_db=False):
@@ -51,7 +51,7 @@ class Tournament:
         self.place = place
         self._start_date = start_date
         self._end_date = end_date
-        self.nb_of_rounds = 4
+        self.nb_of_rounds = nb_of_rounds
         self.rounds = rounds
         self.players = players
         self.time_control = time_control
@@ -70,12 +70,40 @@ class Tournament:
                          place=db_tournament["place"],
                          start_date=db_tournament["_start_date"],
                          end_date=db_tournament["_end_date"],
+                         nb_of_rounds=db_tournament["nb_of_rounds"],
                          rounds=db_tournament["rounds"],
                          players=db_tournament["players"],
                          time_control=db_tournament["time_control"],
                          description=db_tournament["description"],
                          id=tournament_id)
         return new_tournament
+
+    @classmethod
+    def instantiate_from_serialized_tournament(cls,serialized_tournament):
+        new_tournament = cls(name=serialized_tournament["name"],
+                             place=serialized_tournament["place"],
+                             start_date=serialized_tournament["_start_date"],
+                             end_date=serialized_tournament["_end_date"],
+                             nb_of_rounds=serialized_tournament["nb_of_rounds"],
+                             rounds=serialized_tournament["rounds"],
+                             players=serialized_tournament["players"],
+                             time_control=serialized_tournament["time_control"],
+                             description=serialized_tournament["description"],
+                             id=serialized_tournament["_id"])
+        return new_tournament
+
+    def serialize_tournament(self):
+        serialized_tournament = {"name":self.name,
+                                 "place":self.place,
+                                 "_start_date": self._start_date,
+                                 "_end_date": self._end_date,
+                                 "nb_of_rounds": self.nb_of_rounds,
+                                 "rounds" : self.rounds,
+                                 "players": self.players,
+                                 "time_control": self.time_control,
+                                 "description": self.description,
+                                 "_id": self._id}
+        return serialized_tournament
 
     @classmethod
     def available_tournaments(cls):
@@ -123,30 +151,39 @@ class Tournament:
     def tournament_unfinished_rounds_ids(self):
         liste = []
         for i,round in enumerate(self.rounds,start=1):
-            instantiated_round = rn.Round().instantiate_from_dict(round)
-            if not instantiated_round.round_played():
+            instantiated_round = rn.Round().instantiate_from_serialized_round(round)
+            if not instantiated_round.round_completed:
                 liste.append(i)
         return liste
 
     @property
-    def is_finished(self):
-        for round in self.rounds:
-            instantiated_round = rn.Round().instantiate_from_dict(round)
-            if not instantiated_round.round_played():
-                return False
-        return True
-
-    def check_status(self):
+    def tournament_completed(self):
         if self.tournament_nb_of_rounds < self.nb_of_rounds:
-            if len(self.tournament_unfinished_rounds_ids) == 0:
-                self.generate_round()
-                self.generate_matches()
-                DB.update_record_data("tournaments",self._id,"rounds",self.rounds)
-                print("Un nouveau round vient d'être généré pour ce tournoi.")
-        elif self.tournament_nb_of_rounds == self.nb_of_rounds:
-            if len(self.tournament_unfinished_rounds_ids) == 0:
-                self._end_date = TODAY
-                DB.update_record_data("tournaments", self._id, "_end_date", self._end_date)
+            return False
+        else:
+            for round in self.rounds:
+                instantiated_round = rn.Round().instantiate_from_serialized_round(round)
+                if not instantiated_round.round_completed:
+                    return False
+            return True
+
+    @classmethod
+    def uncompleted_tournaments(cls):
+        tournaments_list = []
+        for tournament in Tournament.full_tournaments():
+            tournament = Tournament.instantiate_from_serialized_tournament(tournament)
+            if not tournament.tournament_completed:
+                tournaments_list.append(tournament.serialize_tournament())
+        return tournaments_list
+
+    @classmethod
+    def uncompleted_tournaments_ids(cls):
+        tournaments_ids_list = []
+        for tournament in Tournament.full_tournaments():
+            tournament = Tournament.instantiate_from_serialized_tournament(tournament)
+            if not tournament.tournament_completed:
+                tournaments_ids_list.append(tournament.serialize_tournament()["_id"])
+        return tournaments_ids_list
 
     @property
     def available_players_ids(self):
@@ -164,58 +201,6 @@ class Tournament:
                 list_of_pairs.append((match[0][0]["_id"],match[1][0]["_id"]))
                 list_of_pairs.append((match[1][0]["_id"], match[0][0]["_id"]))
         return list(set(list_of_pairs))
-
-    def check_available_players(self):
-        if len(self.available_players) == 0 and self.tournament_nb_of_players > 0:
-            print("Tous les joueurs de la base sont déjà inscrits au", self.name, end=".\n")
-            print("Merci de créer un nouveau joueur avant de l'inscrire au", self.name, end=".\n")
-        else:
-            print("Voici la liste des joueurs enregistrés non inscrits au", self.name, ":")
-            for player in PLAYERS_TABLE:
-                if player.doc_id not in self.tournament_players_ids:
-                    print(player.doc_id, "->", player["first_name"], player["family_name"])
-
-    def add_player_to_tournament(self,player_id):
-        if player_id in self.tournament_players_ids:
-            print("Ce joueur est déjà inscrit au ", self.name, ".",sep="")
-        elif player_id not in self.available_players:
-            print("Choix non valide.")
-        else:
-            new_player = pl.Player().instantiate_from_db(player_id)
-            self.players.append(vars(new_player))
-            DB.update_record_data("tournaments",self.id,"players",self.players)
-            print(f"{new_player.first_name} {new_player.family_name} a été inscrit au {self.name}.")
-            print(f"Le tournoi compte maintenant {self.tournament_nb_of_players} joueurs.")
-            if self.tournament_nb_of_players == 8:
-                self.generate_round()
-                self.generate_matches()
-                DB.update_record_data("tournaments",self.id,"rounds",self.rounds)
-                print("Le premier round du tournoi a été généré.")
-
-    def is_empty(self,display1=True,display2=True):
-        """
-        Check if no player is enlisted to the tournament
-        Returns a boolean (True/False)
-
-            Parameters
-            ----------
-                None
-
-            Returns
-            -------
-                True if players list is empty or
-                False otherwise
-        """
-        if len(self.players) == 0:
-            if display1:
-                print("Aucun joueur n'est inscrit au ", self.name,".",sep="")
-            return True
-        else:
-            if display2:
-                print("Voici les inscrits au", self.name, ":")
-                for player in self.players:
-                    print(player["_id"], "->", player["first_name"], player["family_name"])
-            return False
 
     def is_full(self):
         """
@@ -288,12 +273,9 @@ class Tournament:
                 None
         """
         rounds = self.rounds
-        if self.tournament_nb_of_rounds < int(self.nb_of_rounds):
-            round_number = len(rounds) + 1
-            new_round = rn.Round("Round " + str(round_number), TODAY, NOW)
-            self.rounds.append(vars(new_round))
-        else:
-            print("Le tournoi a atteint son nombre maximal de rondes.")
+        round_number = len(rounds) + 1
+        new_round = rn.Round("Round " + str(round_number), TODAY, NOW)
+        self.rounds.append(vars(new_round))
         return
 
     def generate_matches(self):
@@ -303,8 +285,9 @@ class Tournament:
         if self.tournament_nb_of_rounds == 1:
             sorted_players = sorted(players, key=lambda x: x["_ranking"], reverse=False)
             for i in range(len(self.players)//2):
-                match = ([sorted_players[i],0],[sorted_players[i + 4],0])
-                new_match = mt.Match(match)
+                player1 = pl.Player.instantiate_from_serialized_player(sorted_players[i])
+                player2 = pl.Player.instantiate_from_serialized_player(sorted_players[i + 4])
+                new_match = mt.Match(player1, player2, 0, 0)
                 matches.append(new_match.pair)
             rounds[0]["matches"] = matches
             return matches
@@ -315,13 +298,21 @@ class Tournament:
             while len(tournament_ranking) > 0:
                 i = 0
                 if (tournament_ranking[i]["_id"], tournament_ranking[j]["_id"]) not in set_of_pairs:
-                    match = ([tournament_ranking[i],0],[tournament_ranking[j],0])
-                    new_match = mt.Match(match)
+                    player1 = pl.Player.instantiate_from_serialized_player(tournament_ranking[i])
+                    player2 = pl.Player.instantiate_from_serialized_player(tournament_ranking[j])
+                    new_match = mt.Match(player1, player2, 0, 0)
                     matches.append(new_match.pair)
                     tournament_ranking.pop(j)
                     tournament_ranking.pop(i)
                     j = 1
                 else:
+                    if len(tournament_ranking) == 2:
+                        player1 = pl.Player.instantiate_from_serialized_player(tournament_ranking[0])
+                        player2 = pl.Player.instantiate_from_serialized_player(tournament_ranking[1])
+                        new_match = mt.Match(player1, player2, 0, 0)
+                        matches.append(new_match.pair)
+                        tournament_ranking.pop(1)
+                        tournament_ranking.pop(0)
                     j += 1
             rounds[-1]["matches"] = matches
             return matches

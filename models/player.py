@@ -97,19 +97,23 @@ class Player:
         return new_player
 
     @classmethod
-    def check_if_any_player(cls,display1=True,display2=True):
-        if len(PLAYERS_TABLE) == 0:
-            if display1 == True:
-                print("Aucun joueur n'est enregistré dans la base de données.")
-            return False
-        else:
-            if display2 == True:
-                print("Voici la liste des joueurs enregistrés dans la base:")
-                for player in PLAYERS_TABLE:
-                    print(player.doc_id, "->", player["first_name"], player["family_name"],
-                          "| Classement actuel ->", player["ranking"])
-                print()
-            return True
+    def instantiate_from_serialized_player(cls, serialized_player):
+        new_player = cls(first_name=serialized_player["first_name"],
+                         family_name=serialized_player["family_name"],
+                         birth_date=serialized_player["_birth_date"],
+                         sex=serialized_player["_sex"],
+                         ranking=serialized_player["_ranking"],
+                         id=serialized_player["_id"])
+        return new_player
+
+    def serialize_player(self):
+        serialized_player = {"first_name":self.first_name,
+                             "family_name":self.family_name,
+                             "_birth_date":self._birth_date,
+                             "_sex":self._sex,
+                             "_ranking":self._ranking,
+                             "_id":self._id}
+        return serialized_player
 
     @classmethod
     def list_of_ids(cls):
