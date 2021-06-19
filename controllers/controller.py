@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # coding: utf-8
+import csv
 import views.views
 from views import views
 from models import player as pl
@@ -78,6 +79,7 @@ class Controller:
     def __init__(self):
         self.model = pl.Player
         self.view = views.HomePage()
+        self.export = False
 
     def entry_controller(self,user_choice):
         if isinstance(user_choice,views.View):
@@ -180,6 +182,12 @@ class Controller:
     def match_controller(self,match_id):
         pass
 
+    def export_list(self, data_list, filename="export.csv"):
+        with open(filename, "w", newline="", encoding="utf-8") as csv_file:
+            columns = [key for key in data_list[0]]
+            writer = csv.DictWriter(csv_file, fieldnames=columns)
+            writer.writeheader()
+            writer.writerows(data_list)
 
     def start(self):
         self.start = True
@@ -225,9 +233,8 @@ class Controller:
                                            sex=self.view.sex,
                                            ranking=self.view.ranking,
                                            add_to_db=True)
-                    new_player_name = new_player.first_name + " " + new_player.family_name
                     pl.Player.update_ids()
-                    next_view = views.PlayerCreationValidationView(new_player_name)
+                    next_view = views.PlayerCreationValidationView(new_player)
                 elif isinstance(self.view, views.AddPlayerToTournamentView):
                     if not self.tournament_exists(int(user_choice)):
                         views.UnknownTournament().show_menu()
@@ -357,7 +364,12 @@ class Controller:
                 elif isinstance(self.view,views.DisplayListPlayers):
                     sorting_choice = user_choice
                     players_list = pl.Player.players_list(sorting_choice)
-                    next_view = views.DisplayListPlayersResults(players_list)
+                    if not self.export:
+                        next_view = views.DisplayListPlayersResults(players_list)
+                    else:
+                        self.export_list(players_list)
+                        self.export = False
+                        next_view = views.ExportListValidation()
                 elif isinstance(self.view,views.DisplayListPlayersByTournament):
                     tournament_id = user_choice
                     if not self.tournament_exists(int(tournament_id)):
@@ -377,10 +389,20 @@ class Controller:
                             elif sorting_choice == "2":
                                 for player in sorted(tournament.players, key=lambda x: int(x['_ranking'])):
                                     players_list.append(player)
-                            next_view = views.DisplayListPlayersByTournamentResults(players_list)
+                            if not self.export:
+                                next_view = views.DisplayListPlayersByTournamentResults(players_list)
+                            else:
+                                self.export_list(players_list)
+                                self.export = False
+                                next_view = views.ExportListValidation()
                 elif isinstance(self.view,views.DisplayListTournaments):
                     tournaments_list = tr.Tournament.tournaments_list()
-                    next_view = views.DisplayListTournamentsResults(tournaments_list)
+                    if not self.export:
+                        next_view = views.DisplayListTournamentsResults(tournaments_list)
+                    else:
+                        self.export_list(tournaments_list)
+                        self.export = False
+                        next_view = views.ExportListValidation()
                 elif isinstance(self.view, views.DisplayListRoundsByTournament):
                     tournament_id = user_choice
                     if not self.tournament_exists(int(tournament_id)):
@@ -393,8 +415,13 @@ class Controller:
                         if len(rounds_list) == 0:
                             next_view = views.NoRound()
                         else:
-                            next_view = views.DisplayListRoundsByTournamentResults(rounds_list,
-                                                                                   tournament_name)
+                            if not self.export:
+                                next_view = views.DisplayListRoundsByTournamentResults(rounds_list,
+                                                                                       tournament_name)
+                            else:
+                                self.export_list(rounds_list)
+                                self.export = False
+                                next_view = views.ExportListValidation()
                 elif isinstance(self.view, views.DisplayListMatchesByTournament):
                     tournament_id = user_choice
                     if not self.tournament_exists(int(tournament_id)):
@@ -416,8 +443,14 @@ class Controller:
                                     score_player2 = match[1][1]
                                     instantiated_match = mt.Match(player1, player2, score_player1, score_player2)
                                     matches_list.append((round["name"],instantiated_match))
-                                next_view = views.DisplayListMatchesByTournamentResults(matches_list,
-                                                                                        tournament_name)
+                                if not self.export:
+                                    next_view = views.DisplayListMatchesByTournamentResults(matches_list,
+                                                                                            tournament_name)
+                                else:
+                                    #TODO Gérer l'export des matches (pb de tuple)
+                                    self.export_list(matches_list)
+                                    self.export = False
+                                    next_view = views.ExportListValidation()
                 elif isinstance(self.view, views.DisplayListRankingsByTournament):
                     tournament_id = user_choice
                     if not self.tournament_exists(int(tournament_id)):
@@ -433,9 +466,17 @@ class Controller:
                         if len(tournament.players) == 0:
                             next_view = views.NoPlayersEnlistedView()
                         else:
-                            next_view = views.DisplayListRankingsByTournamentResults(rankings_list,
-                                                                                     tournament_name,
-                                                                                     status)
+                            if not self.export:
+                                next_view = views.DisplayListRankingsByTournamentResults(rankings_list,
+                                                                                         tournament_name,
+                                                                                         status)
+                            else:
+                                self.export_list(rankings_list)
+                                self.export = False
+                                next_view = views.ExportListValidation()
+                elif isinstance(self.view, views.ExportList):
+                    self.export = True
+                    next_view = views.DisplayList()
                 else:
                     next_view = views.HomePage()
                 self.view = next_view

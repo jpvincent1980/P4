@@ -17,15 +17,13 @@ class View:
 
     @classmethod
     def show_title(cls):
-        # chess_symbol = u"\u265E"
-        chess_symbol = "+"
+        symbol = "+"
         title = "Gestionnaire de tournoi d'échecs"
-
-        print(chess_symbol * (len(title)+6))
-        print(chess_symbol * 2,
+        print(symbol * (len(title)+6))
+        print(symbol * 2,
               f"{title.upper()}",
-              chess_symbol * 2)
-        print(chess_symbol * (len(title)+6))
+              symbol * 2)
+        print(symbol * (len(title)+6))
         print()
 
     @classmethod
@@ -245,11 +243,12 @@ class CreatePlayerView(View):
 
 
 class PlayerCreationValidationView(View):
-    def __init__(self,player_full_name):
-        self.player_full_name = player_full_name
+    def __init__(self,new_player):
+        self.new_player = new_player
 
     def show_menu(self):
-        print(f"{self.player_full_name} a bien été créé dans notre base.")
+        print(f"{self.new_player.first_name} {self.new_player.family_name} "
+              f"a bien été créé dans notre base.")
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -419,7 +418,7 @@ class DisplayList(View):
 class DisplayListPlayers(View):
     global SORTING_MENU
     def show_menu(self):
-        print("Affichez la liste des joueurs par:")
+        print("Classez la liste des joueurs par:")
         for element in SORTING_MENU.items():
             print(element[0],":",element[1])
         return
@@ -590,22 +589,15 @@ class DisplayListRankingsByTournamentResults(View):
 
 class ExportList(View):
     def show_menu(self):
-        print("Cette fonctionnalité sera bientôt disponible.")
-        # global LISTS_MENU
-        # print("Choisissez une liste à exporter parmi les suivantes:")
-        # self.menu = LISTS_MENU
-        # for key in self.menu.items():
-        #     print(key[0], ": ", key[1])
-        # def export_list(filename, columns, data_list):
-        #     with open(filename, "w", newline="", encoding="utf-8") as csvfile:
-        #         columns = columns
-        #         writer = csv.DictWriter(csvfile, fieldnames=columns)
-        #         writer.writeheader()
-        #         writer.writerows(data_list)
-        # Exemples:
-        # export_list("Exportplayers.csv", list(pl.Player().__dict__.keys()), pl.PLAYERS_TABLE.all())
-        # export_list("Exporttournaments.csv.", list(tr.Tournament().__dict__.keys()),
-        #             tr.TOURNAMENTS_TABLE.all())
+        pass
+
+    def ask_user_choice(self):
+        return DisplayList()
+
+
+class ExportListValidation(View):
+    def show_menu(self):
+        print(f"Votre liste a été exportée dans le fichier 'export.csv'.")
 
     def ask_user_choice(self):
         self.back_to_homepage()
@@ -614,16 +606,14 @@ class ExportList(View):
 
 class EndPage(View):
     def show_menu(self):
-        # chess_symbol = u"\u265E"
-        chess_symbol = "+"
+        symbol = "+"
         message = "A bientôt !"
-
         print()
-        print(chess_symbol * (len(message) + 6))
-        print(chess_symbol * 2,
+        print(symbol * (len(message) + 6))
+        print(symbol * 2,
               f"{message.upper()}",
-              chess_symbol * 2)
-        print(chess_symbol * (len(message) + 6))
+              symbol * 2)
+        print(symbol * (len(message) + 6))
         print()
         quit()
 
