@@ -3,7 +3,11 @@
 
 # Gestionnaire de tournois d'échecs (Projet P4)
 
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+Cette application va vous permettre de gérer les résultats d'un tournoi d'échecs organisé selon le système Suisse. 
+
+Il vous permettra de suivre les différentes étapes d'un tournoi (de sa création à la génération de son classement final) de manière décorrélée, c'est-à-dire que vous pourrez créer un tournoi, fermer l'application, puis rouvrir l'application afin d'inscrire un ou plusieurs joueurs au tournoi, fermer l'application, rouvrir l'application et entrer les résultats d'un match, etc.)
+
+Chaque tournoi se joue en quatre rounds et doit avoir huit joueurs pour démarrer. Les rounds et les matchs associés sont automatiquement générés par l'application selon le système Suisse.
 
 ## Pré-requis
 
@@ -38,7 +42,32 @@ Depuis votre terminal de commande et toujours depuis le répertoire dans lequel 
 
 ``python main.py``
 
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+Le menu principal vous permettra de choisir entre la gestion d'un tournoi et l'affichage ou l'export de listes d'informations.
+
+**Gestion d'un tournoi**:
+
+La gestion d'un tournoi se décompose selon les étapes suivantes:
+
+1) Création d'un tournoi
+2) Inscription de huit joueurs au tournoi
+    - si un joueur ne figure pas dans la base de données, il est nécessaire de le créer au préalable afin de pouvoir l'inscrire au tournoi;
+    - lorsque le huitième et dernier joueur est inscrit, l'application crée automatiquement le premier round du tournoi et génère ses matchs selon le système de tournoi Suisse.
+    
+3) Entrée des résultats des matchs du tournoi
+    - lorsque les résultats du dernier match d'un round sont rentrés, l'application génère automatiquement un nouveau round, et ceci jusqu'au quatrième round du tournoi;
+    - lorsque les résultats du dernier match du quatrième round sont rentrés, le tournoi est terminé.
+
+**Affichage/Export d'une liste**:
+
+Vous pouvez choisir d'afficher ou d'exporter une liste parmi les suivantes:
+1) *Liste de tous les joueurs*
+2) *Liste de tous les joueurs d'un tournoi*, 
+3) *Liste de tous les tournois*,
+4) *Liste de tous les tours d'un tournoi*,
+5) *Liste de tous les matchs d'un tournoi*,
+6) *Classement d'un tournoi*
+
+Si vous choisissez d'exporter une liste, celle-ci sera exportée dans un fichier "export.csv" située à la racine du projet.
 
 ## IDE utilisé
 
