@@ -3,7 +3,7 @@
 from models import dbmanager
 import datetime
 
-DB = dbmanager.DBManager("db.json","tournaments","players")
+DB = dbmanager.DBManager("db.json", "tournaments", "players")
 PLAYERS_TABLE = DB.players
 
 
@@ -24,8 +24,9 @@ class Player:
             None
     """
     global DB, PLAYERS_TABLE
+
     def __init__(self, first_name="", family_name="", birth_date="",
-                 sex="", ranking="", id = "", add_to_db=False):
+                 sex="", ranking="", id="", add_to_db=False):
         self.first_name = first_name
         self.family_name = family_name
         self.birth_date = birth_date
@@ -65,7 +66,7 @@ class Player:
         return self._birth_date
 
     @birth_date.setter
-    def birth_date(self,new_birth_date):
+    def birth_date(self, new_birth_date):
         """
         Returns player's birth_date in a defined format:
         JJ/MM/AAAA
@@ -79,11 +80,11 @@ class Player:
                 Player's birth date in JJ/MM/AAAA format
         """
         try:
-            datetime.datetime.strptime(new_birth_date,"%d/%M/%Y")
+            datetime.datetime.strptime(new_birth_date, "%d/%M/%Y")
             self._birth_date = new_birth_date
         except ValueError:
-            new_birth_date = input(f"La date doit être au format JJ/MM/AAAA:\n"
-                         f">>> ")
+            new_birth_date = input("La date doit être au format JJ/MM/AAAA:\n"
+                                   ">>> ")
             self._birth_date = new_birth_date
 
     @property
@@ -102,7 +103,7 @@ class Player:
         return self._sex
 
     @sex.setter
-    def sex(self,new_sex):
+    def sex(self, new_sex):
         """
         Returns player's sex in a defined format:
         'H' or 'F'
@@ -121,8 +122,8 @@ class Player:
             else:
                 raise ValueError
         except ValueError:
-            new_sex = input(f"La réponse doit être H ou F:\n"
-                  f">>> ")
+            new_sex = input("La réponse doit être H ou F:\n"
+                            ">>> ")
             self._sex = new_sex.upper()
 
     @property
@@ -141,7 +142,7 @@ class Player:
         return self._ranking
 
     @ranking.setter
-    def ranking(self,new_ranking):
+    def ranking(self, new_ranking):
         """
         Returns player's ranking as an integer >0
 
@@ -159,27 +160,30 @@ class Player:
             else:
                 raise ValueError
         except ValueError:
-            print(f"Le classement doit être un entier strictement supérieur à 0.")
-            new_ranking = input(f"Entrez le nouveau classement:\n"
-                         f">>> ")
+            print("Le classement doit être un entier strictement supérieur "
+                  "à 0.")
+            new_ranking = input("Entrez le nouveau classement:\n"
+                                ">>> ")
             self._ranking = new_ranking
 
     @classmethod
-    def instantiate_from_db(cls,player_id):
+    def instantiate_from_db(cls, player_id):
         """
-        Creates a Player instance according to the attributes of a TinyDB document
+        Creates a Player instance according to the attributes of a TinyDB
+        document
         from the 'players' table
 
             Parameters
             ----------
-                player_id -> the doc_id of a document from the 'players' TinyDB table
+                player_id -> the doc_id of a document from the 'players'
+                TinyDB table
                 representing a player
 
             Returns
             ----------
                 A Player instance
         """
-        db_player = DB.get_record_data("players",player_id)
+        db_player = DB.get_record_data("players", player_id)
         new_player = cls(first_name=db_player["first_name"],
                          family_name=db_player["family_name"],
                          birth_date=db_player["_birth_date"],
@@ -189,7 +193,7 @@ class Player:
         return new_player
 
     @classmethod
-    def instantiate_from_serialized_player(cls, serialized_player):
+    def instantiate_from_player(cls, serialized_player):
         """
         Creates a Player instance according to the keys and values of
         a dictionary provided as an argument
@@ -215,7 +219,8 @@ class Player:
     @classmethod
     def list_of_ids(cls):
         """
-        Returns the ids of all players created in the TinyDB database in a list.
+        Returns the ids of all players created in the TinyDB database in a
+        list.
         Each player id is equal to its corresponding TinyDB document doc_id.
 
             Parameters
@@ -224,15 +229,16 @@ class Player:
 
             Returns
             ----------
-                A list of integers representing all players created in the TinyDB database
+                A list of integers representing all players created in the
+                TinyDB database
         """
         return [player.doc_id for player in PLAYERS_TABLE]
 
     @classmethod
     def update_ids(cls):
         """
-        Updates the '_id' value of each player of the 'players' TinyDB table with
-        its corresponding document doc_id.
+        Updates the '_id' value of each player of the 'players' TinyDB table
+        with its corresponding document doc_id.
 
             Parameters
             ----------
@@ -243,11 +249,14 @@ class Player:
                 None
         """
         for player in PLAYERS_TABLE:
-            DB.update_record_data("players",player.doc_id,"_id",player.doc_id)
+            DB.update_record_data("players",
+                                  player.doc_id,
+                                  "_id",
+                                  player.doc_id)
         return
 
     @classmethod
-    def players_list(cls,sorting_choice):
+    def players_list(cls, sorting_choice):
         """
         Returns a list of serialized players sorted
         by alphabetical or ranking order
@@ -265,10 +274,12 @@ class Player:
         players_list = []
         sorting_choice = int(sorting_choice)
         if sorting_choice == 1:
-            for player in sorted(PLAYERS_TABLE, key=lambda x: x['family_name']):
+            for player in sorted(PLAYERS_TABLE,
+                                 key=lambda x: x['family_name']):
                 players_list.append(player)
         elif sorting_choice == 2:
-            for player in sorted(PLAYERS_TABLE, key=lambda x: int(x['_ranking'])):
+            for player in sorted(PLAYERS_TABLE,
+                                 key=lambda x: int(x['_ranking'])):
                 players_list.append(player)
         return players_list
 
@@ -285,12 +296,12 @@ class Player:
                 A dictionary with the instance attributes as keys
                 and their values as keys' values
         """
-        serialized_player = {"first_name":self.first_name,
-                             "family_name":self.family_name,
-                             "_birth_date":self._birth_date,
-                             "_sex":self._sex,
-                             "_ranking":self._ranking,
-                             "_id":self._id}
+        serialized_player = {"first_name": self.first_name,
+                             "family_name": self.family_name,
+                             "_birth_date": self._birth_date,
+                             "_sex": self._sex,
+                             "_ranking": self._ranking,
+                             "_id": self._id}
         return serialized_player
 
 

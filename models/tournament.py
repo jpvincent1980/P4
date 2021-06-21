@@ -10,7 +10,7 @@ TIME_CONTROL = {"1": "Bullet",
                 "2": "Blitz",
                 "3": "Coup rapide"}
 
-DB = dbmanager.DBManager("db.json","tournaments","players")
+DB = dbmanager.DBManager("db.json", "tournaments", "players")
 TOURNAMENTS_TABLE = DB.tournaments
 TODAY = time.strftime("%d/%m/%Y")
 NOW = time.strftime("%Hh%Mm%Ss")
@@ -61,7 +61,7 @@ class Tournament:
             instantiate_from_db -> creates a Tournament
             instance from a TinyDB document of the
             'tournaments' table
-            instantiate_from_serialized_tournament -> creates
+            instantiate_from_tournament -> creates
             a Tournament instance from a dictionary
             available_tournaments -> returns a list of
             serialized tournaments that have less than 8 players
@@ -87,11 +87,11 @@ class Tournament:
             generate_matches -> generates all matches of a round
     """
     global TIME_CONTROL, DB, TOURNAMENTS_TABLE
+
     def __init__(self, name="", place="", start_date=TODAY, end_date="",
                  nb_of_rounds=4, rounds=[], players=[],
                  time_control="", description="",
-                 id="",
-                 add_to_db=False):
+                 id="", add_to_db=False):
         """
         Constructor of the Tournament class
 
@@ -99,15 +99,20 @@ class Tournament:
             ----------
                 name -> name of the tournament
                 place -> name of the place where the tournament takes place
-                _start_date -> start date of the tournament automatically assigned by the program
-                _end_date -> end date of the tournament automatically assigned by the program
-                nb_of_rounds  -> number of rounds of the tournament (by default = 4)
+                _start_date -> start date of the tournament automatically
+                assigned by the program
+                _end_date -> end date of the tournament automatically
+                assigned by the program
+                nb_of_rounds  -> number of rounds of the tournament (by
+                default = 4)
                 rounds -> list of tournament's rounds
                 players -> list of tournament's players
-                time_control -> type of time control (Bullet, Blitz or Coup Rapide)
+                time_control -> type of time control (Bullet, Blitz or Coup
+                Rapide)
                 description -> description of the tournament
                 _id -> identifier of the tournament
-                add_to_DB -> a boolean that defines if the tournament must be added
+                add_to_DB -> a boolean that defines if the tournament must
+                be added
                 to the TinyDB database
         """
         self.name = name
@@ -124,7 +129,7 @@ class Tournament:
             serialized_tournament = {}
             for attributes in self.__dict__.items():
                 serialized_tournament[attributes[0]] = attributes[1]
-            DB.add_record("tournaments",serialized_tournament)
+            DB.add_record("tournaments", serialized_tournament)
 
     @property
     def tournament_nb_of_players(self):
@@ -190,7 +195,7 @@ class Tournament:
             -------
                 A list of integers representing the tournament's round ids
         """
-        return [i+1 for i in range(len(self.rounds))]
+        return [i + 1 for i in range(len(self.rounds))]
 
     @property
     def tournament_uncompleted_rounds_ids(self):
@@ -204,11 +209,13 @@ class Tournament:
 
             Returns
             -------
-                A list of integers representing the round ids of uncompleted rounds
+                A list of integers representing the round ids of uncompleted
+                rounds
         """
         rounds_list = []
-        for i,round in enumerate(self.rounds,start=1):
-            instantiated_round = rn.Round().instantiate_from_serialized_round(round)
+        for i, round in enumerate(self.rounds, start=1):
+            instantiated_round = \
+                rn.Round().instantiate_from_round(round)
             if not instantiated_round.round_completed:
                 rounds_list.append(i)
         return rounds_list
@@ -232,7 +239,8 @@ class Tournament:
             return False
         else:
             for round in self.rounds:
-                instantiated_round = rn.Round().instantiate_from_serialized_round(round)
+                instantiated_round = \
+                    rn.Round().instantiate_from_round(round)
                 if not instantiated_round.round_completed:
                     return False
             return True
@@ -249,13 +257,14 @@ class Tournament:
 
             Returns
             -------
-                A list of integers representing players' ids from the TinyDB 'players'
-                table that are not enlisted in the tournament
+                A list of integers representing players' ids from the TinyDB
+                'players' table that are not enlisted in the tournament
         """
         all_players_id = []
         for player in pl.PLAYERS_TABLE.all():
             all_players_id.append(player.doc_id)
-        available_players_id = list(set(all_players_id).difference(self.tournament_players_ids))
+        available_players_id = \
+            list(set(all_players_id).difference(self.tournament_players_ids))
         return available_players_id
 
     @property
@@ -277,7 +286,7 @@ class Tournament:
         list_of_pairs = []
         for round in self.rounds:
             for match in round["matches"]:
-                list_of_pairs.append((match[0][0]["_id"],match[1][0]["_id"]))
+                list_of_pairs.append((match[0][0]["_id"], match[1][0]["_id"]))
                 list_of_pairs.append((match[1][0]["_id"], match[0][0]["_id"]))
         return list(set(list_of_pairs))
 
@@ -297,7 +306,7 @@ class Tournament:
                 A dictionary made of players' id as key and their accumulated
                 score as value
         """
-        tournament_scores = {player["_id"]:0 for player in self.players}
+        tournament_scores = {player["_id"]: 0 for player in self.players}
         for round in self.rounds:
             for match in round["matches"]:
                 for score in match:
@@ -325,43 +334,48 @@ class Tournament:
         players = self.players
         new_ranking = []
         for player in players:
-            new_ranking.append({"player":player,"_ranking":player["_ranking"],"points":tournament_scores[player["_id"]]})
-        new_ranking = sorted(new_ranking,key=lambda x: (x["points"],-int(x["_ranking"])),reverse=True)
+            new_ranking.append({"player": player, "_ranking": player[
+                "_ranking"], "points": tournament_scores[player["_id"]]})
+        new_ranking = sorted(new_ranking,
+                             key=lambda x: (x["points"], -int(x["_ranking"])),
+                             reverse=True)
         new_ranking = [element["player"] for element in new_ranking]
         for player in new_ranking:
-            player.update({"score":tournament_scores[player["_id"]]})
+            player.update({"score": tournament_scores[player["_id"]]})
         return new_ranking
 
     @classmethod
-    def instantiate_from_db(cls,tournament_id):
+    def instantiate_from_db(cls, tournament_id):
         """
-        Creates a tournament instance according to the attributes of a TinyDB document
+        Creates a tournament instance according to the attributes of a
+        TinyDB document
         from the 'tournaments' table
 
             Parameters
             ----------
-                tournament_id -> the doc_id of a document from the 'tournaments" TinyDB table
+                tournament_id -> the doc_id of a document from the
+                'tournaments" TinyDB table
                 representing a tournament
 
             Returns
             ----------
                 A tournament instance
         """
-        db_tournament = DB.get_record_data("tournaments",int(tournament_id))
+        db_tournament = DB.get_record_data("tournaments", int(tournament_id))
         new_tournament = cls(name=db_tournament["name"],
-                         place=db_tournament["place"],
-                         start_date=db_tournament["_start_date"],
-                         end_date=db_tournament["_end_date"],
-                         nb_of_rounds=db_tournament["nb_of_rounds"],
-                         rounds=db_tournament["rounds"],
-                         players=db_tournament["players"],
-                         time_control=db_tournament["time_control"],
-                         description=db_tournament["description"],
-                         id=tournament_id)
+                             place=db_tournament["place"],
+                             start_date=db_tournament["_start_date"],
+                             end_date=db_tournament["_end_date"],
+                             nb_of_rounds=db_tournament["nb_of_rounds"],
+                             rounds=db_tournament["rounds"],
+                             players=db_tournament["players"],
+                             time_control=db_tournament["time_control"],
+                             description=db_tournament["description"],
+                             id=tournament_id)
         return new_tournament
 
     @classmethod
-    def instantiate_from_serialized_tournament(cls,serialized_tournament):
+    def instantiate_from_tournament(cls, serialized_tournament):
         """
         Creates a tournament instance according to the keys and values of
         a dictionary provided as an argument
@@ -369,8 +383,9 @@ class Tournament:
             Parameters
             ----------
                 serialized_tournament -> a dictionary that must contains the
-                following keys -> name, place, _start_date, _end_date, nb_of_rounds,
-                rounds, players, time_control, description and _id
+                following keys -> name, place, _start_date, _end_date,
+                nb_of_rounds, rounds, players, time_control, description and
+                _id
 
             Returns
             ----------
@@ -422,7 +437,8 @@ class Tournament:
 
             Returns
             ----------
-                A list of serialized tournaments that have at least 8 players enlisted
+                A list of serialized tournaments that have at least 8
+                players enlisted
         """
         full_tournaments = []
         for tournament in TOURNAMENTS_TABLE:
@@ -433,8 +449,8 @@ class Tournament:
     @classmethod
     def update_ids(cls):
         """
-        Updates the '_id' value of each tournament of the 'tournaments' TinyDB table with
-        its corresponding document doc_id.
+        Updates the '_id' value of each tournament of the 'tournaments'
+        TinyDB table with its corresponding document doc_id.
 
             Parameters
             ----------
@@ -445,14 +461,19 @@ class Tournament:
                 None
         """
         for tournament in TOURNAMENTS_TABLE:
-            DB.update_record_data("tournaments", tournament.doc_id, "_id", tournament.doc_id)
+            DB.update_record_data("tournaments",
+                                  tournament.doc_id,
+                                  "_id",
+                                  tournament.doc_id)
         return
 
     @classmethod
     def list_of_ids(cls):
         """
-        Returns the ids of all tournaments created in the TinyDB database in a list.
-        Each tournament id is equal to its corresponding TinyDB document doc_id.
+        Returns the ids of all tournaments created in the TinyDB database in
+        a list.
+        Each tournament id is equal to its corresponding TinyDB document
+        doc_id.
 
             Parameters
             ----------
@@ -460,15 +481,16 @@ class Tournament:
 
             Returns
             ----------
-                A list of integers representing all tournaments created in the TinyDB database
+                A list of integers representing all tournaments created in
+                the TinyDB database
         """
         return [tournament.doc_id for tournament in TOURNAMENTS_TABLE]
 
     @classmethod
     def uncompleted_tournaments(cls):
         """
-        Returns uncompleted serialized tournaments in a list. An uncompleted tournament
-        is a tournament that has at least one uncompleted match.
+        Returns uncompleted serialized tournaments in a list. An uncompleted
+        tournament is a tournament that has at least one uncompleted match.
 
             Parameters
             ----------
@@ -476,11 +498,13 @@ class Tournament:
 
             Returns
             ----------
-                A list of dictionaries representing uncompleted serialized tournaments
+                A list of dictionaries representing uncompleted serialized
+                tournaments
         """
         tournaments_list = []
         for tournament in Tournament.full_tournaments():
-            tournament = Tournament.instantiate_from_serialized_tournament(tournament)
+            tournament = \
+                Tournament.instantiate_from_tournament(tournament)
             if not tournament.tournament_completed:
                 tournaments_list.append(tournament.serialize_tournament())
         return tournaments_list
@@ -488,8 +512,8 @@ class Tournament:
     @classmethod
     def uncompleted_tournaments_ids(cls):
         """
-        Returns the ids of uncompleted tournaments in a list. An uncompleted tournament
-        is a tournament that has at least one uncompleted match.
+        Returns the ids of uncompleted tournaments in a list. An uncompleted
+        tournament is a tournament that has at least one uncompleted match.
 
             Parameters
             ----------
@@ -501,7 +525,8 @@ class Tournament:
         """
         tournaments_ids_list = []
         for tournament in Tournament.full_tournaments():
-            tournament = Tournament.instantiate_from_serialized_tournament(tournament)
+            tournament = \
+                Tournament.instantiate_from_tournament(tournament)
             if not tournament.tournament_completed:
                 tournaments_ids_list.append(tournament.serialize_tournament()["_id"])
         return tournaments_ids_list
@@ -526,8 +551,10 @@ class Tournament:
 
     def uncompleted_rounds(self):
         """
-        Returns the list of Round objects of a Tournament instance that are not completed (i.e.
-        there is at least one match of that round for which the sum of players' score is
+        Returns the list of Round objects of a Tournament instance that are
+        not completed (i.e.
+        there is at least one match of that round for which the sum of
+        players' score is
         equal to 0)
 
             Parameters
@@ -536,12 +563,13 @@ class Tournament:
 
             Returns
             ----------
-                A list of Rounds objects if those rounds are not completed (round_completed method returns
+                A list of Rounds objects if those rounds are not completed (
+                round_completed method returns
                 False)
         """
         rounds_list = []
         for round in self.rounds:
-            round = rn.Round.instantiate_from_serialized_round(round)
+            round = rn.Round.instantiate_from_round(round)
             if not round.round_completed:
                 rounds_list.append(round)
         return rounds_list
@@ -559,12 +587,12 @@ class Tournament:
                 A dictionary with the instance attributes as keys
                 and their values as keys' values
         """
-        serialized_tournament = {"name":self.name,
-                                 "place":self.place,
+        serialized_tournament = {"name": self.name,
+                                 "place": self.place,
                                  "_start_date": self._start_date,
                                  "_end_date": self._end_date,
                                  "nb_of_rounds": self.nb_of_rounds,
-                                 "rounds" : self.rounds,
+                                 "rounds": self.rounds,
                                  "players": self.players,
                                  "time_control": self.time_control,
                                  "description": self.description,
@@ -612,13 +640,20 @@ class Tournament:
 
     def generate_matches(self):
         """
-        Returns a list of matches for a given tournament's round. Matches are determined
-        according to two rules: for the first round, all tournament's players are sorted
-        by their ranking and split into two halves, best players of each half play against
-        each others (e.g. first players of each half, second players of each half, etc.).
-        For other rounds, each player is ranked by the number of points accumulated during
-        the current tournament and then by ranking. The highest-ranked player plays against
-        the next best player if they haven't played against each other sooner in the tournament
+        Returns a list of matches for a given tournament's round. Matches
+        are determined
+        according to two rules: for the first round, all tournament's
+        players are sorted
+        by their ranking and split into two halves, best players of each
+        half play against
+        each others (e.g. first players of each half, second players of
+        each half, etc.).
+        For other rounds, each player is ranked by the number of points
+        accumulated during
+        the current tournament and then by ranking. The highest-ranked
+        player plays against
+        the next best player if they haven't played against each other
+        sooner in the tournament
 
             Parameters
             ----------
@@ -632,10 +667,14 @@ class Tournament:
         players = self.players
         rounds = self.rounds
         if self.tournament_nb_of_rounds == 1:
-            sorted_players = sorted(players, key=lambda x: x["_ranking"], reverse=False)
-            for i in range(len(self.players)//2):
-                player1 = pl.Player.instantiate_from_serialized_player(sorted_players[i])
-                player2 = pl.Player.instantiate_from_serialized_player(sorted_players[i + 4])
+            sorted_players = sorted(players,
+                                    key=lambda x: x["_ranking"],
+                                    reverse=False)
+            for i in range(len(self.players) // 2):
+                player1 = \
+                    pl.Player.instantiate_from_player(sorted_players[i])
+                player2 = \
+                    pl.Player.instantiate_from_player(sorted_players[i + 4])
                 new_match = mt.Match(player1, player2, 0, 0)
                 matches.append(new_match.pair)
             rounds[0]["matches"] = matches
@@ -646,9 +685,12 @@ class Tournament:
             j = 1
             while len(tournament_ranking) > 0:
                 i = 0
-                if (tournament_ranking[i]["_id"], tournament_ranking[j]["_id"]) not in set_of_pairs:
-                    player1 = pl.Player.instantiate_from_serialized_player(tournament_ranking[i])
-                    player2 = pl.Player.instantiate_from_serialized_player(tournament_ranking[j])
+                if (tournament_ranking[i]["_id"], tournament_ranking[j]["_id"])\
+                        not in set_of_pairs:
+                    player1 = \
+                        pl.Player.instantiate_from_player(tournament_ranking[i])
+                    player2 = \
+                        pl.Player.instantiate_from_player(tournament_ranking[j])
                     new_match = mt.Match(player1, player2, 0, 0)
                     matches.append(new_match.pair)
                     tournament_ranking.pop(j)
@@ -656,8 +698,10 @@ class Tournament:
                     j = 1
                 else:
                     if len(tournament_ranking) == 2:
-                        player1 = pl.Player.instantiate_from_serialized_player(tournament_ranking[0])
-                        player2 = pl.Player.instantiate_from_serialized_player(tournament_ranking[1])
+                        player1 = \
+                            pl.Player.instantiate_from_player(tournament_ranking[0])
+                        player2 = \
+                            pl.Player.instantiate_from_player(tournament_ranking[1])
                         new_match = mt.Match(player1, player2, 0, 0)
                         matches.append(new_match.pair)
                         tournament_ranking.pop(1)
@@ -665,6 +709,7 @@ class Tournament:
                     j += 1
             rounds[-1]["matches"] = matches
             return matches
+
 
 if __name__ == "__main__":
     pass

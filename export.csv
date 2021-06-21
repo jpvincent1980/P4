@@ -1,2 +1,17 @@
-first_name,family_name,_birth_date,_sex,_ranking,_id
-John,Steed,01/01/2000,H,1,1
+_player1,_player2,_score_player1,_score_player2,round
+John Steed,John Doe,1.0,0.0,Round 1
+Emma Peel,Jane Doe,1.0,0.0,Round 1
+Bill Gates,Pam Smith,0.0,1.0,Round 1
+Steve Jobs,Stan Smith,1.0,0.0,Round 1
+John Steed,Emma Peel,0.5,0.5,Round 2
+Steve Jobs,Pam Smith,0.0,1.0,Round 2
+Bill Gates,John Doe,1.0,0.0,Round 2
+Jane Doe,Stan Smith,1.0,0.0,Round 2
+Pam Smith,John Steed,0.0,1.0,Round 3
+Emma Peel,Bill Gates,1.0,0.0,Round 3
+Steve Jobs,Jane Doe,1.0,0.0,Round 3
+John Doe,Stan Smith,0.5,0.5,Round 3
+John Steed,Steve Jobs,1.0,0.0,Round 4
+Emma Peel,Pam Smith,1.0,0.0,Round 4
+Bill Gates,Jane Doe,0.5,0,Round 4
+John Doe,Stan Smith,0.5,0.5,Round 4

@@ -2,9 +2,9 @@
 # coding: utf-8
 from models import player as pl
 
-POINTS = {"Match perdu":0,
-          "Match nul":0.5,
-          "Match gagné":1}
+POINTS = {"Match perdu": 0,
+          "Match nul": 0.5,
+          "Match gagné": 1}
 
 POINTS_LIST = list(POINTS.values())
 
@@ -22,7 +22,7 @@ class Match:
 
         Methods
         -------
-            instantiate_from_serialized_match -> a class method that returns
+            instantiate_from_match -> a class method that returns
             a Match instance from a dictionary
             serialize_match -> a method that returns a dictionary from a
             Match instance
@@ -32,7 +32,7 @@ class Match:
             sum of points of both players is greater than 0) or False if not
             match_score -> updates the score a match
     """
-    def __init__(self,player1,player2,score_player1=0,score_player2=0):
+    def __init__(self, player1, player2, score_player1=0, score_player2=0):
         """
         Constructor of the Match class
 
@@ -40,8 +40,10 @@ class Match:
             ----------
                 player1 ->  a player instance representing player # 1
                 player2 ->  a player instance representing player # 2
-                score_player1 -> an integer or a float representing player # 1' score
-                score_player2 -> an integer or a float representing player # 2' score
+                score_player1 -> an integer or a float representing score of
+                player # 1
+                score_player2 -> an integer or a float representing score of
+                player # 2
 
             Returns
             ----------
@@ -70,16 +72,15 @@ class Match:
                f"Score -> {self._score_player1} - {self._score_player2}"
 
     @classmethod
-    def instantiate_from_serialized_match(cls, serialized_match):
+    def instantiate_from_match(cls, serialized_match):
         """
         Creates a match instance according to the keys and values of
         a dictionary provided as an argument
 
             Parameters
             ----------
-                serialized_match -> a dictionary that must contains the
-                following keys -> _player1, _player2, _score_player1 and
-                _score_player2
+            serialized_match -> a dictionary that must contains the
+            following keys -> _player1, _player2, _score_player1 and _score_player2
 
             Returns
             ----------
@@ -104,12 +105,11 @@ class Match:
                 A dictionary with the instance attributes as keys
                 and their values as keys' values
         """
-        serialized_match = {"_player1":self._player1,
-                            "_player2":self._player2,
-                            "_score_player1":self._score_player1,
-                            "_score_player2":self._score_player2}
+        serialized_match = {"_player1": self._player1,
+                            "_player2": self._player2,
+                            "_score_player1": self._score_player1,
+                            "_score_player2": self._score_player2}
         return serialized_match
-
 
     @property
     def pair(self):
@@ -125,8 +125,10 @@ class Match:
             ----------
                 A tuple of two lists
         """
-        return ([pl.Player.serialize_player(self._player1),self._score_player1],
-                [pl.Player.serialize_player(self._player2),self._score_player2])
+        return ([pl.Player.serialize_player(self._player1),
+                 self._score_player1],
+                [pl.Player.serialize_player(self._player2),
+                 self._score_player2])
 
     def match_completed(self):
         """
@@ -149,7 +151,7 @@ class Match:
         else:
             return False
 
-    def match_score(self,score_player1,score_player2):
+    def match_score(self, score_player1, score_player2):
         """
         Updates the score of a match
 
@@ -167,6 +169,7 @@ class Match:
         self._score_player1 = score_player1
         self._score_player2 = score_player2
         return
+
 
 if __name__ == "__main__":
     pass

@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # coding: utf-8
 from views import views as views
+from models import match as mt
 
 
 class NoTournament(views.View):
@@ -20,7 +21,7 @@ class NoTournament(views.View):
         """
         Prints message to user
         """
-        print(f"Aucun tournoi n'est créé dans la base de données.")
+        print("Aucun tournoi n'est créé dans la base de données.")
 
     def ask_user_choice(self):
         """
@@ -47,7 +48,7 @@ class NoOpenTournament(views.View):
         """
         Prints message to user
         """
-        print(f"Aucun tournoi n'est actuellement en cours.")
+        print("Aucun tournoi n'est actuellement en cours.")
 
     def ask_user_choice(self):
         """
@@ -55,7 +56,7 @@ class NoOpenTournament(views.View):
         """
         self.back_to_homepage()
         return views.HomePage()
-    
+
 
 class UnknownTournament(views.View):
     """
@@ -74,7 +75,7 @@ class UnknownTournament(views.View):
         """
         Prints message to user
         """
-        print(f"Numéro de tournoi non valide.\n")
+        print("Numéro de tournoi non valide.\n")
 
     def ask_user_choice(self):
         """
@@ -101,7 +102,7 @@ class UnknownPlayer(views.View):
         """
         Prints message to user
         """
-        print(f"Numéro de joueur non valide.\n")
+        print("Numéro de joueur non valide.\n")
 
     def ask_user_choice(self):
         """
@@ -128,7 +129,7 @@ class UnknownRound(views.View):
         """
         Prints message to user
         """
-        print(f"Numéro de round non valide.\n")
+        print("Numéro de round non valide.\n")
 
     def ask_user_choice(self):
         """
@@ -155,7 +156,7 @@ class UnknownMatch(views.View):
         """
         Prints message to user
         """
-        print(f"Numéro de match non valide.\n")
+        print("Numéro de match non valide.\n")
 
     def ask_user_choice(self):
         """
@@ -182,7 +183,7 @@ class NoPlayer(views.View):
         """
         Prints message to user
         """
-        print(f"Aucun joueur n'est créé dans la base de données.\n")
+        print("Aucun joueur n'est créé dans la base de données.\n")
 
     def ask_user_choice(self):
         """
@@ -209,7 +210,7 @@ class NoPlayersEnlistedView(views.View):
         """
         Prints message to user
         """
-        print(f"Aucun joueur n'est inscrit à ce tournoi.\n")
+        print("Aucun joueur n'est inscrit à ce tournoi.\n")
 
     def ask_user_choice(self):
         """
@@ -236,7 +237,7 @@ class PlayerAlreadyEnlisted(views.View):
         """
         Prints message to user
         """
-        print(f"Ce joueur est déjà inscrit à ce tournoi.\n")
+        print("Ce joueur est déjà inscrit à ce tournoi.\n")
 
     def ask_user_choice(self):
         """
@@ -292,8 +293,8 @@ class InvalidChoiceView(views.View):
         """
         Prints message to user
         """
-        print(f"Choix non valide.\n"
-              f"Veuillez ressaisir un choix parmi la liste.\n")
+        print("Choix non valide.\n"
+              "Veuillez ressaisir un choix parmi la liste.\n")
 
     def ask_user_choice(self):
         """
@@ -320,8 +321,8 @@ class NoRound(views.View):
         """
         Prints message to user
         """
-        print(f"Aucun round n'existe pour ce tournoi.\n"
-              f"Vérifiez le nombre de joueurs inscrits.")
+        print("Aucun round n'existe pour ce tournoi.\n"
+              "Vérifiez le nombre de joueurs inscrits.")
 
     def ask_user_choice(self):
         """
@@ -348,7 +349,7 @@ class CompletedRound(views.View):
         """
         Prints message to user
         """
-        print(f"Ce round est terminé.\n")
+        print("Ce round est terminé.\n")
 
     def ask_user_choice(self):
         """
@@ -375,8 +376,8 @@ class NoMatch(views.View):
         """
         Prints message to user
         """
-        print(f"Aucun match n'existe pour ce tournoi.\n"
-              f"Vérifiez le nombre de joueurs inscrits.")
+        print("Aucun match n'existe pour ce tournoi.\n"
+              "Vérifiez le nombre de joueurs inscrits.")
 
     def ask_user_choice(self):
         """
@@ -403,7 +404,7 @@ class CompletedMatch(views.View):
         """
         Prints message to user
         """
-        print(f"Ce match est terminé.\n")
+        print("Ce match est terminé.\n")
 
     def ask_user_choice(self):
         """
@@ -430,7 +431,7 @@ class InactiveTournament(views.View):
         """
         Prints message to user
         """
-        print(f"Ce tournoi n'a pas démarré ou est terminé.\n")
+        print("Ce tournoi n'a pas démarré ou est terminé.\n")
 
     def ask_user_choice(self):
         """
