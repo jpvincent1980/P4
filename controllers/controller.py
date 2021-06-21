@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 # coding: utf-8
 import csv
-import views.views
-from views import views
+from views import views as views
+from views import warnings as wr
 from models import player as pl
 from models import tournament as tr
 from models import round as rn
@@ -62,26 +62,64 @@ VIEWS_REQUIRING_PLAYER = (views.AddPlayerToTournamentView,
 
 class Controller:
     """
-        A class that controls the main.py script.
+    A class that controls user's flow.
 
         Attributes
         ----------
-        model -> represents the Model of this MVC project
-        view -> represents the View of this MVC project
+            model -> represents the Model of this MVC project
+            view -> represents the View of this MVC project
 
         Methods
         -------
-        start -> renvoie la position de x et y
-        counter variable counts the number of "while" loops
-        """
+            entry_controller -> checks if an entry is valid or not
+            menu_controller -> checks if user's choice belongs to menu's list
+            check_if_any_player -> checks if there's at least 1 player
+            in the TinyDB database
+            player_exists -> checks if player exists in the TinyDB database
+            check_if_any_tournament -> checks if there's at least 1 tournament
+            in the TinyDB database
+            tournament_exists -> checks if tournament exists in the TinyDB database
+            check_tournament_status -> checks if tournament is over or if a new round
+            has to be generated
+            export_list -> exports a list to a csv file called 'export.csv'
+            start -> defines and controls the flow of user's actions
+    """
 
 
     def __init__(self):
+        """
+        Constructor of the Controller class
+
+            Parameters
+            ----------
+                model ->  name of the model of the Controller object
+                view -> name of the view of the Controller object
+                export -> boolean that defines if a list must be displayed on the user's terminal (=False)
+                or exported to a file called 'export.csv' (=True). Default value is False.
+
+            Returns
+            ----------
+                None
+        """
         self.model = pl.Player
         self.view = views.HomePage()
         self.export = False
 
     def entry_controller(self,user_choice):
+        """
+        Checks if an entry is valid or not.
+        A valid entry can be either a View instance provided by the program or a string provided
+        by user's input
+
+            Parameters
+            ----------
+                user_choice -> input given by program or user's input
+
+            Returns
+            ----------
+                True if user_choice is a View instance or a valid string (a number or a tuple of numbers),
+                otherwise False
+        """
         if isinstance(user_choice,views.View):
             return True
         else:
@@ -104,8 +142,22 @@ class Controller:
                         return True
 
     def menu_controller(self,user_choice):
+        """
+        Controls if a user's input is a valid one by checking if user's input is a key of either
+        the MAIN_MENU dictionary (if current view is a HomePage instance) or the LISTS_MENU (if
+        current view is a DisplayList instance)
+
+            Parameters
+            ----------
+                user_choice -> entry given by user's input
+
+            Returns
+            ----------
+                True if user_choice is a key of the corresponding menu (MAIN_MENU or LISTS_MENU),
+                otherwise False
+        """
         if user_choice not in self.view.menu:
-            views.InvalidChoiceView().show_menu()
+            wr.InvalidChoiceView().show_message()
             return self.view
         elif self.view.menu == MAIN_MENU:
             return MAIN_MENU_COMMAND[user_choice]
@@ -113,33 +165,92 @@ class Controller:
             return LISTS_MENU_COMMAND[user_choice]
 
     def check_if_any_player(self):
+        """
+        Checks if 'players' table of the TinyDB database has at least one record
+
+            Parameters
+            ----------
+                None
+
+            Returns
+            ----------
+                True if length of the table is > 0, False if length = 0
+        """
         if len(pl.PLAYERS_TABLE) > 0:
             return True
         else:
             return False
 
     def player_exists(self,player_id):
+        """
+        Checks if a player's id is a valid one. A player's id is the doc_id of the 'players' table
+        record corresponding to that player
+
+            Parameters
+            ----------
+                player_id -> an integer
+
+            Returns
+            ----------
+                True if player_id is found in the list_of_ids list, otherwise False
+        """
         if player_id in pl.Player.list_of_ids():
             return True
         else:
             return False
 
     def check_if_any_tournament(self):
+        """
+        Checks if 'tournaments' table of the TinyDB database has at least one record
+
+            Parameters
+            ----------
+                None
+
+            Returns
+            ----------
+                True if length of the table is > 0, False if length = 0
+        """
         if len(tr.TOURNAMENTS_TABLE) > 0:
             return True
         else:
             return False
 
     def tournament_exists(self,tournament_id):
+        """
+        Checks if a tournament's id is a valid one. A tournament's id is the doc_id of the
+        'tournaments' table record corresponding to that tournament
+
+            Parameters
+            ----------
+                tournament_id -> an integer
+
+            Returns
+            ----------
+                True if tournament_id is found in the list_of_ids list, otherwise False
+        """
         if tournament_id in tr.Tournament.list_of_ids():
             return True
         else:
             return False
 
     def check_tournament_status(self,tournament):
+        """
+        Checks the state of a tournament -> if a new round and its matches have to be generated or
+        if tournament is over
+
+            Parameters
+            ----------
+                tournament -> a Tournament instance
+
+            Returns
+            ----------
+                "NewRoundGenerated" if a new round has been generated
+                "TournamentIsOver" if all matches of all rounds have been completed and tournament is over
+        """
         if tournament.tournament_nb_of_rounds < tournament.nb_of_rounds:
             if len(tournament.players) >= 8 and \
-                    len(tournament.tournament_unfinished_rounds_ids) == 0:
+                    len(tournament.tournament_uncompleted_rounds_ids) == 0:
                 tournament.generate_round()
                 tournament.generate_matches()
                 tr.DB.update_record_data("tournaments",
@@ -148,7 +259,7 @@ class Controller:
                                          tournament.rounds)
                 return "NewRoundGenerated"
         elif tournament.tournament_nb_of_rounds == tournament.nb_of_rounds:
-            if len(tournament.tournament_unfinished_rounds_ids) == 0:
+            if len(tournament.tournament_uncompleted_rounds_ids) == 0:
                 tournament._end_date = tr.TODAY
                 tr.DB.update_record_data("tournaments",
                                          tournament._id,
@@ -156,40 +267,38 @@ class Controller:
                                          tournament._end_date)
                 return "TournamentIsOver"
 
-    def uncompleted_rounds(self,tournament):
-        rounds_list = []
-        for round in tournament.rounds:
-            if not round.round_completed:
-                rounds_list.append(round)
-        return rounds_list
+    def export_list(self, data_list, file_name="export.csv"):
+        """
+        Exports a list to a csv file called 'export.csv'
 
+            Parameters
+            ----------
+                data_list -> a list of dictionaries
+                file_name -> full name of the export file. By default, that file is named 'export.csv'
 
-    def check_players(self):
-        if self.tournament.tournament_nb_of_players == 0:
-            print("Aucun joueur n'est inscrit au", self.tournament.name, "pour le moment.")
-        elif self.tournament.tournament_nb_of_players > 0:
-            if self.tournament.tournament_nb_of_players >= 8:
-                print("Le tournoi est complet.")
-            print("Voici la liste des joueurs déjà inscrits au", self.tournament.name, ":")
-            for player in self.tournament.players:
-                print(player["id"], "->", player["first_name"], player["family_name"])
-                self.tournament.tournament_players_ids.append(player["id"])
-        return
-
-    def round_controller(self,round_id):
-        pass
-
-    def match_controller(self,match_id):
-        pass
-
-    def export_list(self, data_list, filename="export.csv"):
-        with open(filename, "w", newline="", encoding="utf-8") as csv_file:
+            Returns
+            ----------
+                None
+        """
+        with open(file_name, "w", newline="", encoding="utf-8") as csv_file:
             columns = [key for key in data_list[0]]
             writer = csv.DictWriter(csv_file, fieldnames=columns)
             writer.writeheader()
             writer.writerows(data_list)
+        return
 
     def start(self):
+        """
+        Defines and controls the flow of user's actions
+
+            Parameters
+            ----------
+                None
+
+            Returns
+            ----------
+                None
+        """
         self.start = True
         counter = 0
         while self.start:
@@ -198,19 +307,19 @@ class Controller:
             counter += 1
             if isinstance(self.view, VIEWS_REQUIRING_TOURNAMENT):
                 if not self.check_if_any_tournament():
-                    self.view = views.NoTournament()
+                    self.view = wr.NoTournament()
             if isinstance(self.view, VIEWS_REQUIRING_PLAYER):
                 if not self.check_if_any_player():
-                    self.view = views.NoPlayer()
+                    self.view = wr.NoPlayer()
             if isinstance(self.view, views.EnterMatchScoreView):
                 if len(tr.Tournament.uncompleted_tournaments()) == 0:
-                    self.view = views.NoOpenTournament()
+                    self.view = wr.NoOpenTournament()
                 else:
                     self.view = views.EnterMatchScoreView(tr.Tournament.uncompleted_tournaments())
-            self.view.show_menu()
+            self.view.show_message()
             user_choice = self.view.ask_user_choice()
             if not self.entry_controller(user_choice):
-                views.InvalidChoiceView().show_menu()
+                wr.InvalidChoiceView().show_message()
                 next_view = self.view
             else:
                 if isinstance(self.view,views.HomePage):
@@ -237,7 +346,7 @@ class Controller:
                     next_view = views.PlayerCreationValidationView(new_player)
                 elif isinstance(self.view, views.AddPlayerToTournamentView):
                     if not self.tournament_exists(int(user_choice)):
-                        views.UnknownTournament().show_menu()
+                        wr.UnknownTournament().show_message()
                         next_view = self.view
                     else:
                         tournament_id = user_choice
@@ -246,10 +355,10 @@ class Controller:
                         next_view = views.DisplayAvailablePlayers(available_players_ids)
                 elif isinstance(self.view, views.DisplayAvailablePlayers):
                     if not self.player_exists(int(user_choice)):
-                        views.UnknownPlayer().show_menu()
+                        wr.UnknownPlayer().show_message()
                         next_view = self.view
                     elif int(user_choice) in tournament.tournament_players_ids:
-                        views.PlayerAlreadyEnlisted().show_menu()
+                        wr.PlayerAlreadyEnlisted().show_message()
                         next_view = self.view
                     else:
                         player_id = user_choice
@@ -266,26 +375,22 @@ class Controller:
                         next_view = views.AddPlayerValidationView(new_player_full_name,tournament_name,completed)
                 elif isinstance(self.view, views.EnterMatchScoreView):
                     if not self.tournament_exists(int(user_choice)):
-                        views.UnknownTournament().show_menu()
+                        wr.UnknownTournament().show_message()
                         next_view = self.view
                     elif int(user_choice) not in tr.Tournament.uncompleted_tournaments_ids():
-                        next_view = views.InactiveTournament()
+                        next_view = wr.InactiveTournament()
                     else:
                         tournament_id = user_choice
                         tournament = tr.Tournament.instantiate_from_db(int(tournament_id))
-                        rounds_list = []
-                        for round in tournament.rounds:
-                            round = rn.Round.instantiate_from_serialized_round(round)
-                            if not round.round_completed:
-                                rounds_list.append(round)
+                        rounds_list = tournament.uncompleted_rounds()
                         next_view = views.DisplayAvailableRounds(rounds_list)
                 elif isinstance(self.view, views.DisplayAvailableRounds):
                     round_id = int(user_choice)
                     if round_id not in tournament.tournament_rounds_ids:
-                        views.UnknownRound().show_menu()
+                        wr.UnknownRound().show_message()
                         next_view = self.view
-                    elif round_id not in tournament.tournament_unfinished_rounds_ids:
-                        views.CompletedRound().show_menu()
+                    elif round_id not in tournament.tournament_uncompleted_rounds_ids:
+                        wr.CompletedRound().show_message()
                         next_view = self.view
                     else:
                         matches_list = []
@@ -301,8 +406,8 @@ class Controller:
                         next_view = views.DisplayAvailableMatches(matches_list)
                 elif isinstance(self.view, views.DisplayAvailableMatches):
                     match_id = int(user_choice)
-                    if match_id not in round.list_of_unplayed_matches_ids:
-                        views.UnknownMatch().show_menu()
+                    if match_id not in round.list_of_uncompleted_matches_ids:
+                        wr.UnknownMatch().show_message()
                         next_view = self.view
                     else:
                         player1 = pl.Player.instantiate_from_serialized_player(tournament.rounds[round_id-1]["matches"][match_id-1][0][0])
@@ -310,8 +415,7 @@ class Controller:
                         score_player1 = tournament.rounds[round_id-1]["matches"][match_id-1][0][1]
                         score_player2 = tournament.rounds[round_id-1]["matches"][match_id-1][1][1]
                         instantiated_match = mt.Match(player1, player2, score_player1, score_player2)
-                        next_view = views.EnterMatchScoresView(instantiated_match,
-                                                               player1,
+                        next_view = views.EnterMatchScoresView(player1,
                                                                player2)
                 elif isinstance(self.view, views.EnterMatchScoresView):
                     score_player1 = float(user_choice[0])
@@ -340,11 +444,11 @@ class Controller:
                         next_view = views.EnterMatchScoresValidationView(round_completed,
                                                                          tournament_completed)
                     else:
-                        views.IncorrectScoresView().show_menu()
+                        wr.IncorrectScoresView().show_message()
                         next_view = self.view
                 elif isinstance(self.view, views.EnterPlayerRankingView):
                     if not self.player_exists(int(user_choice)):
-                        next_view = views.UnknownPlayer()
+                        next_view = wr.UnknownPlayer()
                     else:
                         player_id = int(user_choice)
                         player_full_name = ""
@@ -355,8 +459,8 @@ class Controller:
                                                         " " + \
                                                         player["family_name"]
                                 old_ranking = player["_ranking"]
-                        next_view = views.EnterNewRankingView(player_full_name, old_ranking)
-                elif isinstance(self.view, views.EnterNewRankingView):
+                        next_view = views.EnterPlayerRankingValidationView(player_full_name, old_ranking)
+                elif isinstance(self.view, views.EnterPlayerRankingValidationView):
                     pl.DB.update_record_data("players",player_id,"_ranking",self.view.new_ranking)
                     next_view = views.HomePage()
                 elif isinstance(self.view,views.DisplayList):
@@ -373,14 +477,14 @@ class Controller:
                 elif isinstance(self.view,views.DisplayListPlayersByTournament):
                     tournament_id = user_choice
                     if not self.tournament_exists(int(tournament_id)):
-                        views.UnknownTournament().show_menu()
+                        wr.UnknownTournament().show_message()
                         next_view = self.view
                     else:
                         tournament = tr.Tournament.instantiate_from_db(int(tournament_id))
                         if len(tournament.players) < 1:
-                            next_view = views.NoPlayersEnlistedView()
+                            next_view = wr.NoPlayersEnlistedView()
                         else:
-                            views.DisplayListPlayers().show_menu()
+                            views.DisplayListPlayers().show_message()
                             sorting_choice = views.DisplayListPlayers().ask_user_choice()
                             players_list = []
                             if sorting_choice == "1":
@@ -406,14 +510,14 @@ class Controller:
                 elif isinstance(self.view, views.DisplayListRoundsByTournament):
                     tournament_id = user_choice
                     if not self.tournament_exists(int(tournament_id)):
-                        views.UnknownTournament().show_menu()
+                        wr.UnknownTournament().show_message()
                         next_view = self.view
                     else:
                         tournament = tr.Tournament.instantiate_from_db(int(tournament_id))
                         tournament_name = tournament.name
                         rounds_list = tournament.rounds
                         if len(rounds_list) == 0:
-                            next_view = views.NoRound()
+                            next_view = wr.NoRound()
                         else:
                             if not self.export:
                                 next_view = views.DisplayListRoundsByTournamentResults(rounds_list,
@@ -425,14 +529,14 @@ class Controller:
                 elif isinstance(self.view, views.DisplayListMatchesByTournament):
                     tournament_id = user_choice
                     if not self.tournament_exists(int(tournament_id)):
-                        views.UnknownTournament().show_menu()
+                        wr.UnknownTournament().show_message()
                         next_view = self.view
                     else:
                         tournament = tr.Tournament.instantiate_from_db(int(tournament_id))
                         tournament_name = tournament.name
                         rounds_list = tournament.rounds
                         if len(rounds_list) == 0:
-                            next_view = views.NoRound()
+                            next_view = wr.NoRound()
                         else:
                             matches_list = []
                             for i, round in enumerate(rounds_list, start=1):
@@ -442,19 +546,23 @@ class Controller:
                                     score_player1 = match[0][1]
                                     score_player2 = match[1][1]
                                     instantiated_match = mt.Match(player1, player2, score_player1, score_player2)
-                                    matches_list.append((round["name"],instantiated_match))
-                                if not self.export:
-                                    next_view = views.DisplayListMatchesByTournamentResults(matches_list,
-                                                                                            tournament_name)
-                                else:
-                                    #TODO Gérer l'export des matches (pb de tuple)
-                                    self.export_list(matches_list)
-                                    self.export = False
-                                    next_view = views.ExportListValidation()
+                                    if not self.export:
+                                        matches_list.append((round["name"],instantiated_match))
+                                    else:
+                                        serialized_match = mt.Match.serialize_match(instantiated_match)
+                                        serialized_match["round"] = round["name"]
+                                        matches_list.append(serialized_match)
+                            if not self.export:
+                                next_view = views.DisplayListMatchesByTournamentResults(matches_list,
+                                                                                        tournament_name)
+                            else:
+                                self.export_list(matches_list)
+                                self.export = False
+                                next_view = views.ExportListValidation()
                 elif isinstance(self.view, views.DisplayListRankingsByTournament):
                     tournament_id = user_choice
                     if not self.tournament_exists(int(tournament_id)):
-                        views.UnknownTournament().show_menu()
+                        wr.UnknownTournament().show_message()
                         next_view = self.view
                     else:
                         tournament = tr.Tournament.instantiate_from_db(int(tournament_id))
@@ -464,7 +572,7 @@ class Controller:
                         if tournament.tournament_completed and tournament.is_full():
                             status = "définitif"
                         if len(tournament.players) == 0:
-                            next_view = views.NoPlayersEnlistedView()
+                            next_view = wr.NoPlayersEnlistedView()
                         else:
                             if not self.export:
                                 next_view = views.DisplayListRankingsByTournamentResults(rankings_list,

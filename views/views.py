@@ -3,20 +3,36 @@
 from controllers import controller as ct
 from models import player as pl
 from models import tournament as tr
-from models import round as rn
-from models import match as mt
-
 
 SORTING_MENU = {"1": "Ordre alphabétique",
                 "2": "Classement"}
 
 
 class View:
+    """
+    Main View class to display messages to user
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_title -> prints the opening message
+            show_choice_message -> asks user to make a choice among the menu's lists
+            back_to_homepage -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self):
+        """
+        Constructor of the View class
+        """
         pass
 
     @classmethod
     def show_title(cls):
+        """
+        Prints the opening message
+        """
         symbol = "+"
         title = "Gestionnaire de tournoi d'échecs"
         print(symbol * (len(title)+6))
@@ -27,12 +43,18 @@ class View:
         print()
 
     @classmethod
-    def show_welcome_message(cls):
+    def show_choice_message(cls):
+        """
+        Asks user to make a choice among the menu's lists
+        """
         print("Merci de bien vouloir faire votre choix parmi le menu "
               "ci-dessous:")
 
     @classmethod
     def back_to_homepage(cls):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         print()
         print("Tapez Entrée pour revenir au menu principal.")
         input(">>> ")
@@ -40,170 +62,57 @@ class View:
 
 
 class HomePage(View):
-    def show_menu(self):
+    """
+    Displays main menu and asks user to make a choice
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> waiting for user's input
+    """
+    def show_message(self):
+        """
+        Prints the main menu
+        """
         self.menu = ct.MAIN_MENU
-        self.show_welcome_message()
+        self.show_choice_message()
         for key in self.menu.items():
             print(key[0], ": ", key[1])
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         return input(">>> ")
 
 
-class NoTournament(View):
-    def show_menu(self):
-        print(f"Aucun tournoi n'est créé dans la base de données.")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class NoOpenTournament(View):
-    def show_menu(self):
-        print(f"Aucun tournoi n'est actuellement en cours.")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class UnknownTournament(View):
-    def show_menu(self):
-        print(f"Numéro de tournoi non valide.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class UnknownPlayer(View):
-    def show_menu(self):
-        print(f"Numéro de joueur non valide.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class UnknownRound(View):
-    def show_menu(self):
-        print(f"Numéro de round non valide.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class UnknownMatch(View):
-    def show_menu(self):
-        print(f"Numéro de match non valide.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class NoPlayer(View):
-    def show_menu(self):
-        print(f"Aucun joueur n'est créé dans la base de données.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class NoPlayersEnlistedView(View):
-    def show_menu(self):
-        print(f"Aucun joueur n'est inscrit à ce tournoi.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class PlayerAlreadyEnlisted(View):
-    def show_menu(self):
-        print(f"Ce joueur est déjà inscrit à ce tournoi.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class IncorrectScoresView(View):
-    def show_menu(self):
-        print(f"La somme des points attribués doit être égale à 1.\n"
-              f"Les points attribuables ne peuvent être que: "
-              f"{mt.POINTS_LIST}\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class InvalidChoiceView(View):
-    def show_menu(self):
-        print(f"Choix non valide.\n"
-              f"Veuillez ressaisir un choix parmi la liste.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class NoRound(View):
-    def show_menu(self):
-        print(f"Aucun round n'existe pour ce tournoi.\n"
-              f"Vérifiez le nombre de joueurs inscrits.")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class CompletedRound(View):
-    def show_menu(self):
-        print(f"Ce round est terminé.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class NoMatch(View):
-    def show_menu(self):
-        print(f"Aucun match n'existe pour ce tournoi.\n"
-              f"Vérifiez le nombre de joueurs inscrits.")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class CompletedMatch(View):
-    def show_menu(self):
-        print(f"Ce match est terminé.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
-class InactiveTournament(View):
-    def show_menu(self):
-        print(f"Ce tournoi n'a pas démarré ou est terminé.\n")
-
-    def ask_user_choice(self):
-        self.back_to_homepage()
-        return HomePage()
-
-
 class CreateTournamentView(View):
-    def show_menu(self):
+    """
+    Displays tournament creation view to user and asks for tournament's data
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> waiting for user's input
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print("Vous allez créer un nouveau tournoi.")
 
     def ask_user_choice(self):
+        """
+        Asks user to enter tournament's data
+        """
         self.name = input("Entrez le nom du tournoi -> ")
         self.place = input("Entrez le lieu où se déroule le tournoi -> ")
         self.time_control = input(f"Entrez le numéro du type de contrôle du temps :\n"
@@ -215,24 +124,68 @@ class CreateTournamentView(View):
 
 
 class TournamentCreationValidationView(View):
+    """
+    Displays tournament creation validation message
+
+        Attributes
+        ----------
+            tournament_name -> name of the tournament
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self,tournament_name):
+        """
+        Displays confirmation to user that tournament has been created
+
+            Parameters
+            ----------
+                tournament_name -> name of the tournament
+
+        """
         self.tournament_name = tournament_name
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"{self.tournament_name} a bien été créé dans notre base.")
 
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class CreatePlayerView(View):
-    def show_menu(self):
+    """
+    Asks user to create a new player
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to enter player's data
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print("Vous allez créer un nouveau joueur.")
 
 
     def ask_user_choice(self):
+        """
+        Asks user to enter player's data
+        """
         self.first_name = input("Entrez le prénom du joueur -> ")
         self.family_name = input("Entrez le nom du joueur -> ")
         self.birth_date = input("Entrez la date de naissance du joueur "
@@ -243,122 +196,362 @@ class CreatePlayerView(View):
 
 
 class PlayerCreationValidationView(View):
+    """
+    Displays player creation validation message
+
+        Attributes
+        ----------
+            new_player -> Player instance
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self,new_player):
+        """
+        Displays confirmation to user that player has been created
+
+            Parameters
+            ----------
+                new_player -> player's instance
+
+        """
         self.new_player = new_player
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"{self.new_player.first_name} {self.new_player.family_name} "
               f"a bien été créé dans notre base.")
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class AddPlayerToTournamentView(View):
-    def show_menu(self):
+    """
+    Displays tournaments that are not full (i.e. number
+    of players is less than 8) and asks user to choose one
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to choose a tournament
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Choisissez un tournoi parmi les suivants:")
         for id,name in tr.Tournament.available_tournaments().items():
             print(f"{id} -> {name}")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         tournament_id = input(">>> ")
         return tournament_id
 
 
 class DisplayAvailablePlayers(View):
-    def __init__(self, liste):
-        self.players_available_ids = liste
+    """
+    Displays registered players not yet enlisted to tournament
+    and asks user to choose one
 
-    def show_menu(self):
+        Attributes
+        ----------
+            players_list -> list of players' ids not yet enlisted
+            to the tournament
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to choose a player
+    """
+    def __init__(self, players_list):
+        """
+        Displays registered players not yet enlisted to the tournament
+
+            Parameters
+            ----------
+                players_list -> list of players' ids not yet enlisted
+                to the tournament
+        """
+        self.players_available_ids = players_list
+
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Choisissez un joueur parmi les suivants:")
         for id in self.players_available_ids:
             print(f"{id} -> {pl.DB.get_record_data('players',id)['first_name']} "
                   f"{pl.DB.get_record_data('players',id)['family_name']}")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         player_id = input(">>> ")
         return player_id
 
 
 class AddPlayerValidationView(View):
+    """
+    Displays confirmation message that player has been enlisted to tournament
+
+        Attributes
+        ----------
+            player_full_name -> player's first name + family name
+            tournament_name -> name of the tournament
+            completed -> returns True if tournament is completed
+            (default value = False)
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self,player_full_name,tournament_name,completed=False):
+        """
+        Displays confirmation to user that player has been enlisted
+        to tournament
+
+            Parameters
+            ----------
+                player_full_name -> player's first name + family name
+                tournament_name -> name of the tournament
+                completed -> returns True if tournament is completed
+                (default value = False)
+        """
         self.player_full_name = player_full_name
         self.tournament_name = tournament_name
         self.completed = completed
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"{self.player_full_name} a bien été inscrit au {self.tournament_name}.")
         if self.completed:
             print(f"Un round vient d'être généré pour ce tournoi.")
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class EnterMatchScoreView(View):
+    """
+       Displays uncompleted tournaments and asks user to choose one
+
+           Attributes
+           ----------
+                tournaments_list -> list of serialized
+                tournaments that are uncompleted
+
+           Methods
+           -------
+               show_message -> prints a message to user
+               ask_user_choice -> asks user to choose a tournament
+       """
     def __init__(self,tournaments_list=[]):
+        """
+        Displays list of uncompleted tournaments to user
+
+            Parameters
+            ----------
+                tournaments_list -> list of serialized
+                tournaments that are uncompleted
+        """
         self.tournaments_list = tournaments_list
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Choisissez un tournoi parmi les suivants:")
         for tournament in self.tournaments_list:
             print(f"{tournament['_id']} -> {tournament['name']}")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         tournament_id = input(">>> ")
         return tournament_id
 
 
 class DisplayAvailableRounds(View):
+    """
+       Displays uncompleted rounds and asks user to choose one
+
+           Attributes
+           ----------
+                rounds_list -> list of uncompleted rounds
+
+           Methods
+           -------
+               show_message -> prints a message to user
+               ask_user_choice -> asks user to choose a round
+       """
     def __init__(self,rounds_list=[]):
+        """
+        Displays uncompleted rounds to user
+
+            Parameters
+            ----------
+                rounds_list -> list of uncompleted rounds
+
+        """
         self.rounds_list = rounds_list
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Choisissez un round parmi les suivants:")
         for round in self.rounds_list:
             print(f"{round['name'][-1]} -> {round['name']}")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         round_id = input(">>> ")
         return round_id
 
+
 class DisplayAvailableMatches(View):
+    """
+       Displays uncompleted matches and asks user to choose one
+
+           Attributes
+           ----------
+                matches_list -> list of uncompleted matches
+
+           Methods
+           -------
+               show_message -> prints a message to user
+               ask_user_choice -> asks user to choose a match
+       """
     def __init__(self, matches_list=[]):
+        """
+        Displays uncompleted matches to user
+
+            Parameters
+            ----------
+                matches_list -> list of uncompleted matches
+
+        """
         self.matches_list = matches_list
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Choisissez un match parmi les suivants:")
         for i,match in self.matches_list:
             print(f"{i} -> {match}")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         match_id = input(">>> ")
         return match_id
 
+
 class EnterMatchScoresView(View):
-    def __init__(self, match, player1, player2):
-        self.match = match
+    """
+       Asks user to enter the score of a match
+
+           Attributes
+           ----------
+                player1 -> instance of player # 1
+                player2 -> instance of player # 2
+
+           Methods
+           -------
+               show_message -> prints a message to user
+               ask_user_choice -> asks user to enter score of the match
+       """
+    def __init__(self, player1, player2):
+        """
+           Constructor of the EnterMatchScoresView class
+
+               Attributes
+               ----------
+                   player1 -> instance of player # 1
+                   player2 -> instance of player # 2
+           """
         self.player1 = player1
         self.player2 = player2
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Entrez les scores du match {self.player1} vs "
               f"{self.player2}:")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         score_player1 = input(f">>> Score de {self.player1}:\n")
         score_player2 = input(f">>> Score de {self.player2}:\n")
         return score_player1, score_player2
 
 
 class EnterMatchScoresValidationView(View):
+    """
+    Displays confirmation message that match scores have been entered
+
+        Attributes
+        ----------
+            round_completed -> returns True if round is completed
+            (default value = False)
+            tournament_completed -> returns True if tournament is completed
+            (default value = False)
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self, round_completed=False, tournament_completed=False):
+        """
+        Constructor of the EnterMatchScoresValidationView class
+
+            Parameters
+            ----------
+                round_completed -> returns True if round is completed
+                (default value = False)
+                tournament_completed -> returns True if tournament is completed
+                (default value = False)
+        """
         self.round_completed = round_completed
         self.tournament_completed = tournament_completed
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Le résultat du match a bien été mis à jour.")
         if self.round_completed:
             print(f"Le round est terminé.")
@@ -368,12 +561,30 @@ class EnterMatchScoresValidationView(View):
                 print(f"Un nouveau round a été généré.")
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class EnterPlayerRankingView(View):
-    def show_menu(self):
+    """
+    Asks user to choose a player whose ranking needs to be updated
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to choose a player
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print("Entrez le numéro d'un des joueurs ci-dessous:\n")
         print(f"{'#':^4}{'Prénom':^20}{'Nom':^20}{'H/F':^10}{'Classement':^10}")
         print("+" * 70)
@@ -383,19 +594,50 @@ class EnterPlayerRankingView(View):
         print()
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         player_id = input(">>> ")
         return player_id
 
 
-class EnterNewRankingView(View):
+class EnterPlayerRankingValidationView(View):
+    """
+    Displays confirmation message that player's ranking has been updated
+
+        Attributes
+        ----------
+            player_full_name -> player's first name + family name
+            old_ranking -> player's previous ranking
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to enter new ranking
+            then to press Enter to go back to HomePage
+    """
     def __init__(self,player_full_name,old_ranking):
+        """
+        Constructor of the EnterPlayerRankingValidationView class
+
+            Parameters
+            ----------
+                player_full_name -> player's first name + family name
+                old_ranking -> player's previous ranking
+        """
         self.player_full_name = player_full_name
         self.old_ranking = old_ranking
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Entrez le nouveau classement de {self.player_full_name}:")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         self.new_ranking = input(">>> ") or 0
         print(f"Le classement de {self.player_full_name} a été mis à jour:\n"
               f"Ancien classement -> {self.old_ranking}\n"
@@ -405,34 +647,92 @@ class EnterNewRankingView(View):
 
 
 class DisplayList(View):
-    def show_menu(self):
+    """
+    Displays lists menu and asks user to make a choice
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints the list of lists
+            ask_user_choice -> asks user to choose a list
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print("Choisissez une liste parmi les suivantes:")
         self.menu = ct.LISTS_MENU
         for key in self.menu.items():
             print(key[0], ": ", key[1])
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         return input(">>> ")
 
 
 class DisplayListPlayers(View):
+    """
+    Asks user how to sort players
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user how to sort players
+    """
     global SORTING_MENU
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print("Classez la liste des joueurs par:")
         for element in SORTING_MENU.items():
             print(element[0],":",element[1])
         return
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         ranking_sort = input(">>> ")
         return ranking_sort
 
 
 class DisplayListPlayersResults(View):
+    """
+    Displays list of players
+
+        Attributes
+        ----------
+            players_list -> list of players
+
+        Methods
+        -------
+            show_message -> prints the list of players
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self,players_list):
+        """
+        Constructor of the DisplayListPlayersResults class
+
+            Parameters
+            ----------
+                players_list -> list of players
+        """
         self.players_list = players_list
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Voici la liste des joueurs enregistrés:\n")
         print(f"{'#':^4}{'Prénom':^20}{'Nom':^20}{'Date de Naissance':^20}{'H/F':^6}{'Classement':^10}")
         print("+" * 80)
@@ -442,26 +742,69 @@ class DisplayListPlayersResults(View):
         return
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class DisplayListPlayersByTournament(View):
-    def show_menu(self):
+    """
+    Asks user to choose a tournament
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to choose a tournament
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Choisissez un tournoi parmi les suivants:")
         for id,tournament in enumerate(tr.TOURNAMENTS_TABLE,start=1):
             print(f"{id} -> {tournament['name']}")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         tournament_id = input(">>> ")
         return tournament_id
 
 
 class DisplayListPlayersByTournamentResults(View):
+    """
+    Displays list of players
+
+        Attributes
+        ----------
+            players_list -> list of players
+
+        Methods
+        -------
+            show_message -> prints the list of players
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self,players_list):
+        """
+        Constructor of the DisplayListPlayersByTournamentResults class
+
+            Parameters
+            ----------
+                players_list -> list of players
+        """
         self.players_list = players_list
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Voici la liste des joueurs inscrits à ce tournoi:\n")
         print(f"{'#':^4}{'Prénom':^20}{'Nom':^20}{'Date de Naissance':^20}{'H/F':^6}{'Classement':^10}")
         print("+" * 80)
@@ -471,23 +814,57 @@ class DisplayListPlayersByTournamentResults(View):
         return
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class DisplayListTournaments(View):
-    def show_menu(self):
+    """
+    A class created to keep consistency between List classes
+    """
+    def show_message(self):
+        """
+        None
+        """
         pass
 
     def ask_user_choice(self):
+        """
+        None
+        """
         return "0"
 
 
 class DisplayListTournamentsResults(View):
+    """
+    Displays list of tournaments
+
+        Attributes
+        ----------
+            tournaments_list -> list of tournaments
+
+        Methods
+        -------
+            show_message -> prints the list of tournaments
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self,tournaments_list):
+        """
+        Constructor of the DisplayListTournamentsResults class
+
+            Parameters
+            ----------
+                tournaments_list -> list of tournaments
+        """
         self.tournaments_list = tournaments_list
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print("Voici la liste des tournois enregistrés:\n")
         print(f"{'#':^4}{'Nom':^20}"
               f"{'Lieu':^20}{'Date de début':^14}{'Date de fin':^14}"
@@ -499,26 +876,72 @@ class DisplayListTournamentsResults(View):
                   f"{tournament['time_control']:^14}")
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class DisplayListRoundsByTournament(View):
-    def show_menu(self):
+    """
+    Asks user to chose a tournament in order to display its rounds
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints the list of tournaments
+            ask_user_choice -> asks user to choose a tournament
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Choisissez un tournoi parmi les suivants:")
         for id,tournament in enumerate(tr.TOURNAMENTS_TABLE,start=1):
             print(f"{id} -> {tournament['name']}")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         tournament_id = input(">>> ")
         return tournament_id
 
+
 class DisplayListRoundsByTournamentResults(View):
+    """
+    Displays list of rounds
+
+        Attributes
+        ----------
+            rounds_list -> list of tournament's rounds
+            tournament_name -> name of tournament
+
+        Methods
+        -------
+            show_message -> prints the list of tournament's rounds
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self, rounds_list, tournament_name):
+        """
+        Constructor of the DisplayListRoundsByTournamentResults class
+
+            Parameters
+            ----------
+                rounds_list -> list of tournament's rounds
+                tournament_name -> name of tournament
+        """
         self.rounds_list = rounds_list
         self.tournament_name = tournament_name
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Voici la liste des rounds du {self.tournament_name}:\n")
         print(f"{'Nom':^20}{'Date de début':^20}{'Heure de début':^20}{'Date de fin':^20}{'Heure de fin':^20}")
         print("+" * 100)
@@ -528,54 +951,148 @@ class DisplayListRoundsByTournamentResults(View):
         return
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class DisplayListMatchesByTournament(View):
-    def show_menu(self):
+    """
+    Asks user to chose a tournament in order to display its matches
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints the list of tournaments
+            ask_user_choice -> asks user to choose a tournament
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Choisissez un tournoi parmi les suivants:")
         for id,tournament in enumerate(tr.TOURNAMENTS_TABLE,start=1):
             print(f"{id} -> {tournament['name']}")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         tournament_id = input(">>> ")
         return tournament_id
 
 
 class DisplayListMatchesByTournamentResults(View):
+    """
+    Displays list of matches
+
+        Attributes
+        ----------
+            matches_list -> list of matches
+            tournament_name -> name of tournament
+
+        Methods
+        -------
+            show_message -> prints the list of matches
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self,matches_list,tournament_name):
+        """
+        Constructor of the DisplayListMatchesByTournamentResults class
+
+            Parameters
+            ----------
+                matches_list -> list of matches
+                tournament_name -> name of tournament
+        """
         self.matches_list = matches_list
         self.tournament_name = tournament_name
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Voici la liste des matchs du {self.tournament_name}:\n")
         for round, match in self.matches_list:
             print(f"{round} \n ********** \n {match} \n")
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class DisplayListRankingsByTournament(View):
-    def show_menu(self):
+    """
+    Asks user to chose a tournament in order to display its rankings
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints the list of tournaments
+            ask_user_choice -> asks user to choose a tournament
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Choisissez un tournoi parmi les suivants:")
         for id,tournament in enumerate(tr.TOURNAMENTS_TABLE,start=1):
             print(f"{id} -> {tournament['name']}")
 
     def ask_user_choice(self):
+        """
+        Waiting for user's input
+        """
         tournament_id = input(">>> ")
         return tournament_id
 
 
 class DisplayListRankingsByTournamentResults(View):
+    """
+    Displays list of players according to tournament's rankings
+
+        Attributes
+        ----------
+            rankings_list -> list of players according to tournament's rankings
+            tournament_name -> name of tournament
+            status -> status of rankings ('définitif' or 'provisoire')
+            depending on either tournament is completed or not
+
+        Methods
+        -------
+            show_message -> prints the list of matches
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
     def __init__(self,rankings_list,tournament_name,status):
+        """
+        Constructor of the DisplayListRankingsByTournamentResults class
+
+            Parameters
+            ----------
+                rankings_list -> list of players according to tournament's rankings
+                tournament_name -> name of tournament
+                status -> status of rankings ('définitif' or 'provisoire')
+                depending on either tournament is completed or not
+        """
         self.rankings_list = rankings_list
         self.tournament_name = tournament_name
         self.status = status
 
-    def show_menu(self):
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Le classement {self.status} du {self.tournament_name} est le suivant:\n")
         print(f"{'Position':^10}{'Prénom':^20}{'Nom':^20}{'Points':^20}")
         print("+" * 70)
@@ -584,28 +1101,76 @@ class DisplayListRankingsByTournamentResults(View):
 
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
+
 class ExportList(View):
-    def show_menu(self):
+    """
+    A class that will use the DisplayList class to ask user to choose
+    the list that needs to be exported
+    """
+    def show_message(self):
+        """
+        None
+        """
         pass
 
     def ask_user_choice(self):
+        """
+        Returns a DisplayList instance
+        """
         return DisplayList()
 
 
 class ExportListValidation(View):
-    def show_menu(self):
+    """
+    Displays a confirmation message to user that the requested list
+    has been exported to a csv file
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints a message to user
+            ask_user_choice -> asks user to press Enter to go back to HomePage
+    """
+    def show_message(self):
+        """
+        Prints message to user
+        """
         print(f"Votre liste a été exportée dans le fichier 'export.csv'.")
 
     def ask_user_choice(self):
+        """
+        Asks user to press Enter to go back to HomePage
+        """
         self.back_to_homepage()
         return HomePage()
 
 
 class EndPage(View):
-    def show_menu(self):
+    """
+    Displays a goodbye message to user
+
+        Attributes
+        ----------
+            None
+
+        Methods
+        -------
+            show_message -> prints a message to user
+
+    """
+    def show_message(self):
+        """
+        Prints ending message to user
+        """
         symbol = "+"
         message = "A bientôt !"
         print()
