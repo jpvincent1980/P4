@@ -1,7 +1,6 @@
 env/
 Exercices/
 Livrables/
-flake8_rapport/
 .idea/
 */__pycache__/*
 *.docx
