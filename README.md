@@ -36,6 +36,14 @@ Lorsque votre environnement virtuel est activé, installez les modules Python n�
 
 ``pip install -r requirements.txt``
 
+
+Flake8:
+
+Flake8 faisant partie des modules du fichier ``requirements.txt``, 
+celui-ci sera installé dans votre environnement virtuel. Vous pourrez 
+générer un nouveau rapport flake8 en saisissant la commande ``flake8`` dans votre terminal depuis le répertoire où vous avez enregistré le 
+projet.
+
 ## Démarrage
 
 Depuis votre terminal de commande et toujours depuis le répertoire dans lequel les fichiers ont été téléchargés, saisissez la commande suivante:
@@ -68,6 +76,7 @@ Vous pouvez choisir d'afficher ou d'exporter une liste parmi les suivantes:
 6) *Classement d'un tournoi*
 
 Si vous choisissez d'exporter une liste, celle-ci sera exportée dans un fichier "export.csv" située à la racine du projet.
+
 
 ## IDE utilisé
 
