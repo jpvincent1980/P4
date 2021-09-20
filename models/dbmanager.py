@@ -42,7 +42,7 @@ class DBManager:
             ----------
                 None
         """
-        self.DB = TinyDB(db_name)
+        self.DB = TinyDB(db_name, indent=4)
         for table in table_name:
             setattr(self, table, self.DB.table(table))
 

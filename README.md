@@ -1,7 +1,7 @@
 ![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)
 ![forthebadge](https://forthebadge.com/images/badges/powered-by-coffee.svg)
 
-![alt text](https://github.com/jpvincent1980/P9/blob/main/Screenshot.png)
+![alt text](https://github.com/jpvincent1980/P4/blob/main/Screenshot.png)
 
 # Gestionnaire de tournois d'échecs (Projet P4)
 
